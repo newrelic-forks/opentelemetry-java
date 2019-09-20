@@ -23,6 +23,7 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.Timestamp;
 import com.newrelic.telemetry.Attributes;
 import com.newrelic.telemetry.spans.SpanBatch;
+import io.opentelemetry.proto.resource.v1.Resource;
 import io.opentelemetry.proto.trace.v1.AttributeValue;
 import io.opentelemetry.proto.trace.v1.Span;
 import io.opentelemetry.proto.trace.v1.Status;
@@ -46,11 +47,14 @@ class SpanBatchAdapterTest {
             .name("spanName")
             .parentId("000000002e5a40d9")
             .durationMs(1333.020111d)
+            .attributes(new Attributes().put("host", "bar").put("datacenter", "boo"))
             .build();
     SpanBatch expected = new SpanBatch(Collections.singleton(span1), new Attributes());
 
     SpanBatchAdapter testClass = new SpanBatchAdapter(new Attributes());
 
+    Resource inputResource =
+        Resource.newBuilder().putLabels("host", "bar").putLabels("datacenter", "boo").build();
     Span inputSpan =
         Span.newBuilder()
             .setSpanId(ByteString.copyFrom(spanIdBytes))
@@ -60,6 +64,7 @@ class SpanBatchAdapterTest {
             .setEndTime(Timestamp.newBuilder().setSeconds(1001).setNanos(789_020_111).build())
             .setName("spanName")
             .setStatus(Status.newBuilder().setCode(200).build())
+            .setResource(inputResource)
             .build();
 
     SpanBatch result = testClass.adaptToSpanBatch(Collections.singletonList(inputSpan));
