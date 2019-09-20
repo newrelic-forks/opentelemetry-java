@@ -26,6 +26,7 @@ import com.google.protobuf.util.Timestamps;
 import com.newrelic.telemetry.Attributes;
 import com.newrelic.telemetry.spans.Span.SpanBuilder;
 import com.newrelic.telemetry.spans.SpanBatch;
+import io.opentelemetry.proto.resource.v1.Resource;
 import io.opentelemetry.proto.trace.v1.AttributeValue;
 import io.opentelemetry.proto.trace.v1.Span;
 import io.opentelemetry.proto.trace.v1.Status;
@@ -103,7 +104,18 @@ class SpanBatchAdapter {
           break;
       }
     }
+    addResourceAttributes(span, attributes);
     return attributes;
+  }
+
+  private static void addResourceAttributes(Span span, Attributes attributes) {
+    Resource resource = span.getResource();
+    if (resource != null) {
+      Map<String, String> labelsMap = resource.getLabelsMap();
+      for (Entry<String, String> resourceLabel : labelsMap.entrySet()) {
+        attributes.put(resourceLabel.getKey(), resourceLabel.getValue());
+      }
+    }
   }
 
   @Nullable
