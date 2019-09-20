@@ -16,6 +16,7 @@
 
 package io.opentelemetry.exporters.newrelic;
 
+import com.newrelic.telemetry.Attributes;
 import com.newrelic.telemetry.exceptions.ResponseException;
 import com.newrelic.telemetry.exceptions.RetryWithBackoffException;
 import com.newrelic.telemetry.exceptions.RetryWithRequestedWaitException;
@@ -44,7 +45,10 @@ public class NewRelicSpanExporter implements SpanExporter {
    * @param spanBatchSender An instance that sends a SpanBatch to the New Relic trace ingest API
    * @since 0.1.0
    */
-  public NewRelicSpanExporter(SpanBatchAdapter adapter, SpanBatchSender spanBatchSender) {
+  NewRelicSpanExporter(SpanBatchAdapter adapter, SpanBatchSender spanBatchSender) {
+    if (spanBatchSender == null) {
+      throw new IllegalArgumentException("You must provide a non-null SpanBatchSender");
+    }
     this.adapter = adapter;
     this.spanBatchSender = spanBatchSender;
   }
@@ -70,4 +74,55 @@ public class NewRelicSpanExporter implements SpanExporter {
 
   @Override
   public void shutdown() {}
+
+  /**
+   * Creates a new builder instance.
+   *
+   * @return a new instance builder for this exporter.
+   */
+  public static Builder newBuilder() {
+    return new Builder();
+  }
+
+  /**
+   * Builder utility for this exporter. Note that the SpanBatchSender must be provided.
+   *
+   * @since 0.1.0
+   */
+  public static class Builder {
+
+    private Attributes commonAttributes = new Attributes();
+    private SpanBatchSender spanBatchSender;
+
+    /**
+     * A SpanBatchSender from the New Relic Telemetry SDK. This is a required field.
+     *
+     * @param spanBatchSender the sender to use.
+     * @return this builder's instance
+     */
+    public Builder setSpanBatchSender(SpanBatchSender spanBatchSender) {
+      this.spanBatchSender = spanBatchSender;
+      return this;
+    }
+
+    /**
+     * A set of attributes that should be attached to all Spans that are sent to New Relic.
+     *
+     * @param commonAttributes the attributes to attach
+     * @return this builder's instance
+     */
+    public Builder commonAttributes(Attributes commonAttributes) {
+      this.commonAttributes = commonAttributes;
+      return this;
+    }
+
+    /**
+     * Constructs a new instance of the exporter based on the builder's values.
+     *
+     * @return a new NewRelicSpanExporter instance
+     */
+    public NewRelicSpanExporter build() {
+      return new NewRelicSpanExporter(new SpanBatchAdapter(commonAttributes), spanBatchSender);
+    }
+  }
 }
