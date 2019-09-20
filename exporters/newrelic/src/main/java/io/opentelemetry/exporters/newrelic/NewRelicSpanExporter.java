@@ -117,7 +117,7 @@ public class NewRelicSpanExporter implements SpanExporter {
      * @param apiKey your New Relic Insert Key.
      * @return this builder's instance
      */
-    public Builder newRelicApiKey(String apiKey) {
+    public Builder apiKey(String apiKey) {
       this.apiKey = apiKey;
       return this;
     }
