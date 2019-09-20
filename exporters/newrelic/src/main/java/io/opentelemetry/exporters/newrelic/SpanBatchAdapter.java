@@ -75,13 +75,13 @@ class SpanBatchAdapter {
   }
 
   private static Attributes generateSpanAttributes(Span span) {
+    Attributes attributes = createIntrinsicAttributes(span);
+    attributes = addPossibleErrorAttribute(span, attributes);
+    return addResourceAttributes(span, attributes);
+  }
+
+  private static Attributes createIntrinsicAttributes(Span span) {
     Attributes attributes = new Attributes();
-    if (span.hasStatus()) {
-      Status status = span.getStatus();
-      if (status.getMessage() != null && !status.getMessage().isEmpty()) {
-        attributes.put("error.message", status.getMessage());
-      }
-    }
     Span.Attributes originalAttributes = span.getAttributes();
     Map<String, AttributeValue> attributeMap = originalAttributes.getAttributeMapMap();
     for (Entry<String, AttributeValue> stringAttributeValueEntry : attributeMap.entrySet()) {
@@ -104,11 +104,20 @@ class SpanBatchAdapter {
           break;
       }
     }
-    addResourceAttributes(span, attributes);
     return attributes;
   }
 
-  private static void addResourceAttributes(Span span, Attributes attributes) {
+  private static Attributes addPossibleErrorAttribute(Span span, Attributes attributes) {
+    if (span.hasStatus()) {
+      Status status = span.getStatus();
+      if (status.getMessage() != null && !status.getMessage().isEmpty()) {
+        attributes.put("error.message", status.getMessage());
+      }
+    }
+    return attributes;
+  }
+
+  private static Attributes addResourceAttributes(Span span, Attributes attributes) {
     Resource resource = span.getResource();
     if (resource != null) {
       Map<String, String> labelsMap = resource.getLabelsMap();
@@ -116,6 +125,7 @@ class SpanBatchAdapter {
         attributes.put(resourceLabel.getKey(), resourceLabel.getValue());
       }
     }
+    return attributes;
   }
 
   @Nullable
