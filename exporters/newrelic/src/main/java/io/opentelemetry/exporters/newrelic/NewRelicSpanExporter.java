@@ -17,11 +17,13 @@
 package io.opentelemetry.exporters.newrelic;
 
 import com.newrelic.telemetry.Attributes;
+import com.newrelic.telemetry.SimpleSpanBatchSender;
 import com.newrelic.telemetry.exceptions.ResponseException;
 import com.newrelic.telemetry.exceptions.RetryWithBackoffException;
 import com.newrelic.telemetry.exceptions.RetryWithRequestedWaitException;
 import com.newrelic.telemetry.spans.SpanBatch;
 import com.newrelic.telemetry.spans.SpanBatchSender;
+import com.newrelic.telemetry.spans.SpanBatchSenderBuilder;
 import io.opentelemetry.proto.trace.v1.Span;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import java.util.List;
@@ -85,7 +87,8 @@ public class NewRelicSpanExporter implements SpanExporter {
   }
 
   /**
-   * Builder utility for this exporter. Note that the SpanBatchSender must be provided.
+   * Builder utility for this exporter. At the very minimum, you need to provide your New Relic
+   * Insert API Key for this to work.
    *
    * @since 0.1.0
    */
@@ -93,15 +96,43 @@ public class NewRelicSpanExporter implements SpanExporter {
 
     private Attributes commonAttributes = new Attributes();
     private SpanBatchSender spanBatchSender;
+    private String apiKey;
+    private boolean enableAuditLogging = false;
 
     /**
-     * A SpanBatchSender from the New Relic Telemetry SDK. This is a required field.
+     * A SpanBatchSender from the New Relic Telemetry SDK. This allows you to provide your own
+     * custom-built SpanBatchSender (for instance, if you need to enable proxies, etc).
      *
      * @param spanBatchSender the sender to use.
      * @return this builder's instance
      */
-    public Builder setSpanBatchSender(SpanBatchSender spanBatchSender) {
+    public Builder spanBatchSender(SpanBatchSender spanBatchSender) {
       this.spanBatchSender = spanBatchSender;
+      return this;
+    }
+
+    /**
+     * Set your New Relic Insert Key.
+     *
+     * @param apiKey your New Relic Insert Key.
+     * @return this builder's instance
+     */
+    public Builder newRelicApiKey(String apiKey) {
+      this.apiKey = apiKey;
+      return this;
+    }
+
+    /**
+     * Turn on Audit Logging for the New Relic Telemetry SDK. This will provide additional logging
+     * of the data being sent to the New Relic Trace API at DEBUG logging level.
+     *
+     * <p>WARNING: If there is sensitive data in your Traces, this will cause that data to be
+     * exposed to wherever your logs are being sent.
+     *
+     * @return this builder's instance
+     */
+    public Builder enableAuditLogging() {
+      enableAuditLogging = true;
       return this;
     }
 
@@ -122,6 +153,13 @@ public class NewRelicSpanExporter implements SpanExporter {
      * @return a new NewRelicSpanExporter instance
      */
     public NewRelicSpanExporter build() {
+      if (spanBatchSender == null) {
+        SpanBatchSenderBuilder builder = SimpleSpanBatchSender.builder(apiKey);
+        if (enableAuditLogging) {
+          builder.enableAuditLogging();
+        }
+        spanBatchSender = builder.build();
+      }
       return new NewRelicSpanExporter(new SpanBatchAdapter(commonAttributes), spanBatchSender);
     }
   }
