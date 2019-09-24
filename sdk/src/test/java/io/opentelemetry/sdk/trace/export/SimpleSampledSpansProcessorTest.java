@@ -77,7 +77,7 @@ public class SimpleSampledSpansProcessorTest {
         .thenReturn(Span.getDefaultInstance())
         .thenThrow(new RuntimeException());
     simpleSampledSpansProcessor.onEnd(readableSpan);
-    verify(spanExporter).export(Collections.singletonList(Span.getDefaultInstance()));
+    verify(spanExporter).export(Collections.singletonList(SpanData.newBuilder().build()));
   }
 
   @Test
@@ -97,11 +97,11 @@ public class SimpleSampledSpansProcessorTest {
         .thenReturn(Span.getDefaultInstance())
         .thenReturn(Span.getDefaultInstance())
         .thenThrow(new RuntimeException());
-    doThrow(new RuntimeException()).when(spanExporter).export(ArgumentMatchers.<Span>anyList());
+    doThrow(new RuntimeException()).when(spanExporter).export(ArgumentMatchers.<SpanData>anyList());
     simpleSampledSpansProcessor.onEnd(readableSpan);
     // Try again, now will no longer return error.
     simpleSampledSpansProcessor.onEnd(readableSpan);
-    verify(spanExporter, times(2)).export(Collections.singletonList(Span.getDefaultInstance()));
+    verify(spanExporter, times(2)).export(Collections.singletonList(SpanData.newBuilder().build()));
   }
 
   @Test

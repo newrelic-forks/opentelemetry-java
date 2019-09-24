@@ -52,10 +52,14 @@ public final class SimpleSampledSpansProcessor implements SpanProcessor {
       return;
     }
     try {
-      spanExporter.export(Collections.singletonList(span.toSpanProto()));
+      spanExporter.export(Collections.singletonList(makeSpanData(span)));
     } catch (Throwable e) {
       logger.log(Level.WARNING, "Exception thrown by the export.", e);
     }
+  }
+
+  private SpanData makeSpanData(ReadableSpan readableSpan) {
+    throw new UnsupportedOperationException("implement met!!!");
   }
 
   @Override

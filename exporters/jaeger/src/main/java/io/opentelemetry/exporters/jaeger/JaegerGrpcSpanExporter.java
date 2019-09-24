@@ -16,13 +16,10 @@
 
 package io.opentelemetry.exporters.jaeger;
 
-import io.grpc.Deadline;
 import io.grpc.ManagedChannel;
-import io.grpc.StatusRuntimeException;
-import io.opentelemetry.exporters.jaeger.proto.api_v2.Collector;
 import io.opentelemetry.exporters.jaeger.proto.api_v2.CollectorServiceGrpc;
 import io.opentelemetry.exporters.jaeger.proto.api_v2.Model;
-import io.opentelemetry.proto.trace.v1.Span;
+import io.opentelemetry.sdk.trace.export.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -103,36 +100,38 @@ public final class JaegerGrpcSpanExporter implements SpanExporter {
    * @return the result of the operation
    */
   @Override
-  public ResultCode export(List<Span> spans) {
-    Model.Batch.Builder builder = Model.Batch.newBuilder();
-    builder.addAllSpans(Adapter.toJaeger(spans));
-    builder.setProcess(this.process);
-
-    Collector.PostSpansRequest.Builder requestBuilder = Collector.PostSpansRequest.newBuilder();
-    requestBuilder.setBatch(builder.build());
-    Collector.PostSpansRequest request = requestBuilder.build();
-
-    try {
-      CollectorServiceGrpc.CollectorServiceBlockingStub stub = this.blockingStub;
-      if (deadline > 0) {
-        stub = stub.withDeadline(Deadline.after(deadline, TimeUnit.MILLISECONDS));
-      }
-
-      // for now, there's nothing to check in the response object
-      //noinspection ResultOfMethodCallIgnored
-      stub.postSpans(request);
-      return ResultCode.SUCCESS;
-    } catch (StatusRuntimeException e) {
-      switch (e.getStatus().getCode()) {
-        case DEADLINE_EXCEEDED:
-        case UNAVAILABLE:
-          return ResultCode.FAILED_RETRYABLE;
-        default:
-          return ResultCode.FAILED_NOT_RETRYABLE;
-      }
-    } catch (Throwable t) {
-      return ResultCode.FAILED_NOT_RETRYABLE;
-    }
+  public ResultCode export(List<SpanData> spans) {
+    throw new UnsupportedOperationException("re-implement me");
+    //    Model.Batch.Builder builder = Model.Batch.newBuilder();
+    //    builder.addAllSpans(Adapter.toJaeger(spans));
+    //    builder.setProcess(this.process);
+    //
+    //    Collector.PostSpansRequest.Builder requestBuilder =
+    // Collector.PostSpansRequest.newBuilder();
+    //    requestBuilder.setBatch(builder.build());
+    //    Collector.PostSpansRequest request = requestBuilder.build();
+    //
+    //    try {
+    //      CollectorServiceGrpc.CollectorServiceBlockingStub stub = this.blockingStub;
+    //      if (deadline > 0) {
+    //        stub = stub.withDeadline(Deadline.after(deadline, TimeUnit.MILLISECONDS));
+    //      }
+    //
+    //      // for now, there's nothing to check in the response object
+    //      //noinspection ResultOfMethodCallIgnored
+    //      stub.postSpans(request);
+    //      return ResultCode.SUCCESS;
+    //    } catch (StatusRuntimeException e) {
+    //      switch (e.getStatus().getCode()) {
+    //        case DEADLINE_EXCEEDED:
+    //        case UNAVAILABLE:
+    //          return ResultCode.FAILED_RETRYABLE;
+    //        default:
+    //          return ResultCode.FAILED_NOT_RETRYABLE;
+    //      }
+    //    } catch (Throwable t) {
+    //      return ResultCode.FAILED_NOT_RETRYABLE;
+    //    }
   }
 
   /**
