@@ -18,7 +18,6 @@ package io.opentelemetry.sdk.trace.export;
 
 import com.google.common.util.concurrent.MoreExecutors;
 import io.opentelemetry.internal.Utils;
-import io.opentelemetry.proto.trace.v1.Span;
 import io.opentelemetry.sdk.trace.ReadableSpan;
 import io.opentelemetry.sdk.trace.SpanProcessor;
 import java.util.ArrayList;
@@ -257,27 +256,39 @@ public final class BatchSampledSpansProcessor implements SpanProcessor {
     }
 
     private void exportBatches(ArrayList<ReadableSpan> spanList) {
-      ArrayList<Span> spansProtoList = new ArrayList<>(maxExportBatchSize);
+      ArrayList<SpanData> spanDataBuffer = new ArrayList<>(maxExportBatchSize);
       // TODO: Record a counter for pushed spans.
       for (int i = 0; i < spanList.size(); ) {
         int batchSizeLimit = Math.min(i + maxExportBatchSize, spanList.size());
-        for (int j = i; j < batchSizeLimit; j++) {
-          spansProtoList.add(spanList.get(j).toSpanProto());
-          // Remove the reference to the RecordEventsSpanImpl to allow GC to free the memory.
-          spanList.set(j, null);
-        }
+        createSpanDataForExport(spanList, spanDataBuffer, i, batchSizeLimit);
         // One full batch, export it now. Wrap the list with unmodifiableList to ensure exporter
         // does not change the list.
-        onBatchExport(Collections.unmodifiableList(spansProtoList));
+        onBatchExport(Collections.unmodifiableList(spanDataBuffer));
         // Cannot clear because the exporter may still have a reference to this list (e.g. async
         // scheduled work), so just create a new list.
-        spansProtoList = new ArrayList<>(maxExportBatchSize);
+        spanDataBuffer = new ArrayList<>(maxExportBatchSize);
         i = batchSizeLimit;
       }
     }
 
+    private void createSpanDataForExport(
+        List<ReadableSpan> spanList,
+        ArrayList<SpanData> spanDataBuffer,
+        int startIndex,
+        int batchSizeLimit) {
+      for (int j = startIndex; j < batchSizeLimit; j++) {
+        spanDataBuffer.add(makeSpanData(spanList.get(j)));
+        // Remove the reference to the RecordEventsSpanImpl to allow GC to free the memory.
+        spanList.set(j, null);
+      }
+    }
+
+    private SpanData makeSpanData(ReadableSpan readableSpan) {
+      throw new UnsupportedOperationException("implement me");
+    }
+
     // Exports the list of Span protos to all the ServiceHandlers.
-    private void onBatchExport(List<Span> spans) {
+    private void onBatchExport(List<SpanData> spans) {
       // In case of any exception thrown by the service handlers continue to run.
       try {
         spanExporter.export(spans);

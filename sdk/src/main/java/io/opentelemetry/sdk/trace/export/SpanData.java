@@ -24,6 +24,7 @@ import io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.SpanId;
 import io.opentelemetry.trace.Status;
+import io.opentelemetry.trace.TraceId;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -73,19 +74,23 @@ public abstract class SpanData {
       List<io.opentelemetry.trace.Link> links,
       Status status,
       Timestamp endTimestamp) {
-    return new AutoValue_SpanData(
-        context,
-        parentSpanId,
-        resource,
-        name,
-        kind,
-        startTimestamp,
-        Collections.unmodifiableMap(new HashMap<>(Utils.checkNotNull(attributes, "attributes"))),
-        Collections.unmodifiableList(
-            new ArrayList<>(Utils.checkNotNull(timedEvents, "timedEvents"))),
-        Collections.unmodifiableList(new ArrayList<>(Utils.checkNotNull(links, "links"))),
-        status,
-        endTimestamp);
+    return AutoValue_SpanData.newBuilder()
+        .context(context)
+        .parentSpanId(parentSpanId)
+        .resource(resource)
+        .name(name)
+        .kind(kind)
+        .startTimestamp(startTimestamp)
+        .attributes(
+            Collections.unmodifiableMap(
+                new HashMap<>(Utils.checkNotNull(attributes, "attributes"))))
+        .timedEvents(
+            Collections.unmodifiableList(
+                new ArrayList<>(Utils.checkNotNull(timedEvents, "timedEvents"))))
+        .links(Collections.unmodifiableList(new ArrayList<>(Utils.checkNotNull(links, "links"))))
+        .status(status)
+        .endTimestamp(endTimestamp)
+        .build();
   }
 
   /**
@@ -178,6 +183,14 @@ public abstract class SpanData {
   public abstract Timestamp getEndTimestamp();
 
   SpanData() {}
+
+  public TraceId getTraceId() {
+    return getContext().getTraceId();
+  }
+
+  public SpanId getSpanId() {
+    return getContext().getSpanId();
+  }
 
   /**
    * An immutable implementation of {@link io.opentelemetry.trace.Link}.
@@ -387,5 +400,36 @@ public abstract class SpanData {
     private static long floorMod(long x, long y) {
       return x - floorDiv(x, y) * y;
     }
+  }
+
+  public static Builder newBuilder() {
+    return AutoValue_SpanData.newBuilder();
+  }
+
+  @AutoValue.Builder
+  public abstract static class Builder {
+    public abstract Builder context(SpanContext context);
+
+    public abstract Builder parentSpanId(SpanId parentSpanId);
+
+    public abstract Builder resource(Resource resource);
+
+    public abstract Builder name(String name);
+
+    public abstract Builder startTimestamp(Timestamp timestamp);
+
+    public abstract Builder attributes(Map<String, AttributeValue> attributes);
+
+    public abstract Builder timedEvents(List<TimedEvent> events);
+
+    public abstract Builder status(Status status);
+
+    public abstract Builder kind(Kind kind);
+
+    public abstract Builder links(List<io.opentelemetry.trace.Link> links);
+
+    public abstract Builder endTimestamp(Timestamp timestamp);
+
+    public abstract SpanData build();
   }
 }
