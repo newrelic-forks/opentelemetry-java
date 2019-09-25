@@ -36,7 +36,7 @@ import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
 /**
- * Immutable representation of all data collected by the {@link Span} class.
+ * Immutable representation of all data collected by the {@link io.opentelemetry.trace.Span} class.
  *
  * @since 0.1.0
  */
@@ -182,12 +182,20 @@ public abstract class SpanData {
    */
   public abstract Timestamp getEndTimestamp();
 
-  SpanData() {}
-
+  /**
+   * The trace id for this span, retrieved from the associated SpanContext.
+   *
+   * @return the TraceId
+   */
   public TraceId getTraceId() {
     return getContext().getTraceId();
   }
 
+  /**
+   * The id of this span, retrieved from the associated SpanContext.
+   *
+   * @return the SpanId
+   */
   public SpanId getSpanId() {
     return getContext().getSpanId();
   }
@@ -282,11 +290,10 @@ public abstract class SpanData {
      *
      * @param timestamp the {@code Timestamp} of this event.
      * @param event the event.
-     * @param <T> the type of value that is timed.
      * @return a new immutable {@code TimedEvent<T>}
      * @since 0.1.0
      */
-    public static <T> TimedEvent create(Timestamp timestamp, io.opentelemetry.trace.Event event) {
+    public static TimedEvent create(Timestamp timestamp, io.opentelemetry.trace.Event event) {
       return new AutoValue_SpanData_TimedEvent(timestamp, event);
     }
 
@@ -325,8 +332,6 @@ public abstract class SpanData {
     private static final int MAX_NANOS = 999999999;
     private static final long MILLIS_PER_SECOND = 1000L;
     private static final long NANOS_PER_MILLI = 1000 * 1000;
-
-    Timestamp() {}
 
     /**
      * Creates a new timestamp from given seconds and nanoseconds.
@@ -402,34 +407,138 @@ public abstract class SpanData {
     }
   }
 
+  /**
+   * Creates a new Builder for creating an SpanData instance.
+   *
+   * @return a new Builder.
+   * @since 0.1.0
+   */
   public static Builder newBuilder() {
     return new AutoValue_SpanData.Builder();
   }
 
+  /**
+   * A {@code Builder} class for {@link SpanData}.
+   *
+   * @since 0.1.0
+   */
   @AutoValue.Builder
   public abstract static class Builder {
+
+    /**
+     * The SpanContext associated with this span.
+     *
+     * @param context the SpanContext
+     * @see SpanContext
+     * @return this
+     * @since 0.1.0
+     */
     public abstract Builder context(SpanContext context);
 
+    /**
+     * The parent span id associated for this span, which may be null.
+     *
+     * @param parentSpanId the SpanId of the parent
+     * @see SpanId
+     * @return this
+     * @since 0.1.0
+     */
     public abstract Builder parentSpanId(SpanId parentSpanId);
 
+    /**
+     * Set the resource associated with this span. Must not be null.
+     *
+     * @param resource the Resource that generated this span.
+     * @see Resource
+     * @return this
+     * @since 0.1.0
+     */
     public abstract Builder resource(Resource resource);
 
+    /**
+     * Set the name of the span. Must not be null.
+     *
+     * @param name the name.
+     * @return this
+     * @since 0.1.0
+     */
     public abstract Builder name(String name);
 
+    /**
+     * Set the start timestamp of the span. Must not be null.
+     *
+     * @param timestamp the start Timestamp
+     * @see Timestamp
+     * @return this
+     * @since 0.1.0
+     */
     public abstract Builder startTimestamp(Timestamp timestamp);
 
-    public abstract Builder attributes(Map<String, AttributeValue> attributes);
-
-    public abstract Builder timedEvents(List<TimedEvent> events);
-
-    public abstract Builder status(Status status);
-
-    public abstract Builder kind(Kind kind);
-
-    public abstract Builder links(List<io.opentelemetry.trace.Link> links);
-
+    /**
+     * Set the end timestamp of the span. Must not be null.
+     *
+     * @param timestamp the end Timestamp
+     * @see Timestamp
+     * @return this
+     * @since 0.1.0
+     */
     public abstract Builder endTimestamp(Timestamp timestamp);
 
+    /**
+     * Set the attributes that are associated with this span, as a Map of String keys to
+     * AttributeValue instances. Must not be null, may be empty.
+     *
+     * @param attributes a Map&lt;String, AttributeValue&gt; of attributes.
+     * @see AttributeValue
+     * @return this
+     * @since 0.1.0
+     */
+    public abstract Builder attributes(Map<String, AttributeValue> attributes);
+
+    /**
+     * Set timed events that are associated with this span. Must not be null, may be empty.
+     *
+     * @param events A List&lt;TimedEvent&gt; of events associated with this span.
+     * @see TimedEvent
+     * @return this
+     * @since 0.1.0
+     */
+    public abstract Builder timedEvents(List<TimedEvent> events);
+
+    /**
+     * Set the status for this span. Must not be null.
+     *
+     * @param status The Status of this span.
+     * @return this
+     * @since 0.1.0
+     */
+    public abstract Builder status(Status status);
+
+    /**
+     * Set the kind of span. Must not be null.
+     *
+     * @param kind The Kind of span.
+     * @return this
+     * @since 0.1.0
+     */
+    public abstract Builder kind(Kind kind);
+
+    /**
+     * Set the links associated with this span. Must not be null, may be empty.
+     *
+     * @param links A List&lt;Link&gt;
+     * @see io.opentelemetry.trace.Link
+     * @return this
+     * @since 0.1.0
+     */
+    public abstract Builder links(List<io.opentelemetry.trace.Link> links);
+
+    /**
+     * Create a new SpanData instance from the data in this.
+     *
+     * @return a new SpanData instance
+     * @since 0.1.0
+     */
     public abstract SpanData build();
   }
 }
