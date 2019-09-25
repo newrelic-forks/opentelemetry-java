@@ -22,7 +22,6 @@ import static org.mockito.Mockito.verifyZeroInteractions;
 import static org.mockito.Mockito.when;
 import static org.mockito.internal.verification.VerificationModeFactory.times;
 
-import io.opentelemetry.proto.trace.v1.Span;
 import io.opentelemetry.sdk.trace.ReadableSpan;
 import io.opentelemetry.trace.SpanContext;
 import io.opentelemetry.trace.SpanId;
@@ -73,9 +72,6 @@ public class SimpleSampledSpansProcessorTest {
   @Test
   public void onEndSync_SampledSpan() {
     when(readableSpan.getSpanContext()).thenReturn(SAMPLED_SPAN_CONTEXT);
-    when(readableSpan.toSpanProto())
-        .thenReturn(Span.getDefaultInstance())
-        .thenThrow(new RuntimeException());
     simpleSampledSpansProcessor.onEnd(readableSpan);
     verify(spanExporter).export(Collections.singletonList(SpanData.newBuilder().build()));
   }
@@ -83,9 +79,6 @@ public class SimpleSampledSpansProcessorTest {
   @Test
   public void onEndSync_NotSampledSpan() {
     when(readableSpan.getSpanContext()).thenReturn(NOT_SAMPLED_SPAN_CONTEXT);
-    when(readableSpan.toSpanProto())
-        .thenReturn(Span.getDefaultInstance())
-        .thenThrow(new RuntimeException());
     simpleSampledSpansProcessor.onEnd(readableSpan);
     verifyZeroInteractions(spanExporter);
   }
@@ -93,10 +86,6 @@ public class SimpleSampledSpansProcessorTest {
   @Test
   public void onEndSync_ExporterReturnError() {
     when(readableSpan.getSpanContext()).thenReturn(SAMPLED_SPAN_CONTEXT);
-    when(readableSpan.toSpanProto())
-        .thenReturn(Span.getDefaultInstance())
-        .thenReturn(Span.getDefaultInstance())
-        .thenThrow(new RuntimeException());
     doThrow(new RuntimeException()).when(spanExporter).export(ArgumentMatchers.<SpanData>anyList());
     simpleSampledSpansProcessor.onEnd(readableSpan);
     // Try again, now will no longer return error.
