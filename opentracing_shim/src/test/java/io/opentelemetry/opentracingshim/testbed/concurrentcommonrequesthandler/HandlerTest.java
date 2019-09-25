@@ -25,9 +25,9 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 
-import io.opentelemetry.proto.trace.v1.Span.SpanKind;
 import io.opentelemetry.sdk.trace.export.InMemorySpanExporter;
 import io.opentelemetry.sdk.trace.export.SpanData;
+import io.opentelemetry.trace.Span.Kind;
 import io.opentracing.Scope;
 import io.opentracing.Span;
 import io.opentracing.Tracer;
@@ -65,7 +65,7 @@ public class HandlerTest {
     assertEquals(2, finished.size());
 
     for (SpanData spanData : finished) {
-      assertEquals(SpanKind.CLIENT, spanData.getKind());
+      assertEquals(Kind.CLIENT, spanData.getKind());
     }
 
     assertNotEquals(finished.get(0).getTraceId(), finished.get(1).getTraceId());
