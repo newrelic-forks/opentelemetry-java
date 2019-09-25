@@ -56,21 +56,68 @@ public interface ReadableSpan {
    */
   io.opentelemetry.proto.trace.v1.Span toSpanProto();
 
+  /**
+   * Returns the value of System.nanoTime() when the span was started.
+   *
+   * @return Long value representing the System.nanoTime().
+   */
   long getStartNanoTime();
 
+  /**
+   * Returns the end nano time (see {@link System#nanoTime()}). If the span has not ended, should
+   * return the current nano time.
+   *
+   * @return Long value representing the end nano time.
+   */
   long getEndNanoTime();
 
+  /**
+   * Returns the kind of span (enum).
+   *
+   * @return The Kind of span.
+   */
   Kind getKind();
 
+  /**
+   * Returns the parent span id.
+   *
+   * @return The parent span id.
+   */
   SpanId getParentSpanId();
 
+  /**
+   * Returns the resource.
+   *
+   * @return The resource.
+   */
   Resource getResource();
 
+  /**
+   * Returns the status.
+   *
+   * @return The status.
+   */
   Status getStatus();
 
+  /**
+   * Gets the list of timed events currently held by thsi span.
+   *
+   * @return A list of TimedEvents.
+   */
   List<TimedEvent> getEvents();
 
+  /**
+   * Returns a copy of the links in this span. The list must be a copy that does not leak out the
+   * original (mutable) links.
+   *
+   * @return List of Links for this span.
+   */
   List<Link> getLinks();
 
+  /**
+   * Returns the attributes for this span. Must be immutable.
+   *
+   * @return The attributes for this span.
+   */
   Map<String, AttributeValue> getAttributes();
 }

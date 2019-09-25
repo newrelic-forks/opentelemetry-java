@@ -24,6 +24,7 @@ import io.opentelemetry.sdk.internal.Clock;
 import io.opentelemetry.sdk.internal.TimestampConverter;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.trace.config.TraceConfig;
+import io.opentelemetry.sdk.trace.export.SpanData;
 import io.opentelemetry.trace.AttributeValue;
 import io.opentelemetry.trace.Event;
 import io.opentelemetry.trace.Link;
@@ -237,6 +238,11 @@ final class RecordEventsReadableSpan implements ReadableSpan, Span {
     }
   }
 
+  /**
+   * Returns a copy of the timed events for this span.
+   *
+   * @return The TimedEvents for this span.
+   */
   @Override
   public List<TimedEvent> getEvents() {
     synchronized (this) {
@@ -244,13 +250,31 @@ final class RecordEventsReadableSpan implements ReadableSpan, Span {
     }
   }
 
+  /**
+   * Returns a copy of the links for this span.
+   *
+   * @return A copy of the Links for this span.
+   */
   @Override
   public List<Link> getLinks() {
     synchronized (this) {
-      return links == null ? Collections.<Link>emptyList() : new ArrayList<>(links);
+      if (links == null) {
+        return Collections.emptyList();
+      }
+      List<Link> result = new ArrayList<>(links.size());
+      for (Link link : links) {
+        SpanData.Link newLink = SpanData.Link.create(context, link.getAttributes());
+        result.add(newLink);
+      }
+      return result;
     }
   }
 
+  /**
+   * Returns an unmodifiable view of the attributes associated with this span.
+   *
+   * @return An unmodifiable view of the attributes associated wit this span
+   */
   @Override
   public Map<String, AttributeValue> getAttributes() {
     synchronized (this) {
@@ -286,6 +310,11 @@ final class RecordEventsReadableSpan implements ReadableSpan, Span {
     return kind;
   }
 
+  /**
+   * Returns the span id of this span's parent span.
+   *
+   * @return The span id of the parent span.
+   */
   @Nullable
   @Override
   public SpanId getParentSpanId() {
