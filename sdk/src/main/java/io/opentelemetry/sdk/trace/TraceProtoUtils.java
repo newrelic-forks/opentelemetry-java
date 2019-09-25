@@ -131,7 +131,7 @@ public final class TraceProtoUtils {
   @VisibleForTesting
   static Span.TimedEvent toProtoTimedEvent(TimedEvent timedEvent, TimestampConverter converter) {
     Span.TimedEvent.Builder builder = Span.TimedEvent.newBuilder();
-    builder.setTime(converter.convertNanoTime(timedEvent.getNanotime()));
+    builder.setTime(converter.convertNanoTimeProto(timedEvent.getNanotime()));
     builder.setEvent(
         Span.TimedEvent.Event.newBuilder()
             .setName(timedEvent.getName())

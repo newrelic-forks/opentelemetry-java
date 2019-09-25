@@ -16,6 +16,7 @@
 
 package io.opentelemetry.sdk.trace;
 
+import io.opentelemetry.sdk.internal.TimestampConverter;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.trace.AttributeValue;
 import io.opentelemetry.trace.Link;
@@ -113,4 +114,6 @@ public interface ReadableSpan {
    * @return The attributes for this span.
    */
   Map<String, AttributeValue> getAttributes();
+
+  TimestampConverter getTimestampConverter();
 }

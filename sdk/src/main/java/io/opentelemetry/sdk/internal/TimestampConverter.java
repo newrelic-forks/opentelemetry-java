@@ -19,6 +19,7 @@ package io.opentelemetry.sdk.internal;
 import com.google.protobuf.Timestamp;
 import com.google.protobuf.util.Durations;
 import com.google.protobuf.util.Timestamps;
+import io.opentelemetry.sdk.trace.export.SpanData;
 import javax.annotation.concurrent.Immutable;
 
 /**
@@ -46,12 +47,16 @@ public class TimestampConverter {
    * @param nanoTime value to convert.
    * @return the {@code Timestamp} representation of the {@code time}.
    */
-  public Timestamp convertNanoTime(long nanoTime) {
+  public Timestamp convertNanoTimeProto(long nanoTime) {
     return Timestamps.add(timestamp, Durations.fromNanos(nanoTime - this.nanoTime));
   }
 
   private TimestampConverter(Timestamp timestamp, long nanoTime) {
     this.timestamp = timestamp;
     this.nanoTime = nanoTime;
+  }
+
+  public SpanData.Timestamp convertNanoTime(long nanoTime) {
+    return SpanData.Timestamp.create(timestamp.getSeconds(), (int) (nanoTime - this.nanoTime));
   }
 }
