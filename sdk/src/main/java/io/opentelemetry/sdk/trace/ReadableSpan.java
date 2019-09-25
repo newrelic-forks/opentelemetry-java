@@ -16,10 +16,20 @@
 
 package io.opentelemetry.sdk.trace;
 
+import io.opentelemetry.sdk.resources.Resource;
+import io.opentelemetry.trace.AttributeValue;
+import io.opentelemetry.trace.Link;
 import io.opentelemetry.trace.Span;
+import io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.trace.SpanContext;
+import io.opentelemetry.trace.SpanId;
+import io.opentelemetry.trace.Status;
+import java.util.List;
+import java.util.Map;
 
-/** The extend Span interface used by the SDK. */
+/**
+ * The extend Span interface used by the SDK.
+ */
 public interface ReadableSpan {
 
   /**
@@ -47,4 +57,22 @@ public interface ReadableSpan {
    * @return the proto representation of the collected data for this particular {@code Span}.
    */
   io.opentelemetry.proto.trace.v1.Span toSpanProto();
+
+  long getStartNanoTime();
+
+  long getEndNanoTime();
+
+  Kind getKind();
+
+  SpanId getParentSpanId();
+
+  Resource getResource();
+
+  Status getStatus();
+
+  List<TimedEvent> getEvents();
+
+  List<Link> getLinks();
+
+  Map<String, AttributeValue> getAttributes();
 }
