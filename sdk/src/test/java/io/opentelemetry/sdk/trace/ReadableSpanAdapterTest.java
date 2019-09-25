@@ -1,5 +1,6 @@
 package io.opentelemetry.sdk.trace;
 
+import static io.opentelemetry.sdk.trace.ReadableSpanAdapter.nanoToTimestamp;
 import static org.junit.Assert.assertEquals;
 
 import io.opentelemetry.sdk.internal.Clock;
@@ -7,6 +8,7 @@ import io.opentelemetry.sdk.internal.TestClock;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.trace.config.TraceConfig;
 import io.opentelemetry.sdk.trace.export.SpanData;
+import io.opentelemetry.sdk.trace.export.SpanData.Event;
 import io.opentelemetry.trace.AttributeValue;
 import io.opentelemetry.trace.Link;
 import io.opentelemetry.trace.Span.Kind;
@@ -17,6 +19,7 @@ import io.opentelemetry.trace.TraceFlags;
 import io.opentelemetry.trace.TraceId;
 import io.opentelemetry.trace.Tracestate;
 import io.opentelemetry.trace.util.Links;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -43,22 +46,54 @@ public class ReadableSpanAdapterTest {
     labels.put("foo", "bar");
     Resource resource = Resource.create(labels);
     Map<String, AttributeValue> attributes = TestUtils.generateRandomAttributes();
-    SpanContext context = SpanContext
-        .create(traceId, spanId, TraceFlags.getDefault(), Tracestate.getDefault());
+    Map<String, AttributeValue> event1Attributes = TestUtils.generateRandomAttributes();
+    Map<String, AttributeValue> event2Attributes = TestUtils.generateRandomAttributes();
+    SpanContext context =
+        SpanContext.create(traceId, spanId, TraceFlags.getDefault(), Tracestate.getDefault());
     Link link1 = Links.create(context, TestUtils.generateRandomAttributes());
     List<Link> links = Collections.singletonList(link1);
 
-    ReadableSpan readableSpan = RecordEventsReadableSpan
-        .startSpan(context, name, kind, parentSpanId, traceConfig, spanProcessor,
-            null, clock, resource, attributes, links);
+    RecordEventsReadableSpan readableSpan =
+        RecordEventsReadableSpan.startSpan(
+            context,
+            name,
+            kind,
+            parentSpanId,
+            traceConfig,
+            spanProcessor,
+            null,
+            clock,
+            resource,
+            attributes,
+            links);
+    readableSpan.addEvent("event1", event1Attributes);
+    readableSpan.addEvent("event2", event2Attributes);
+    readableSpan.end();
 
-    SpanData expected = SpanData.newBuilder()
-        .status(Status.OK)
-        .build();
+    SpanData expected =
+        SpanData.newBuilder()
+            .name(name)
+            .kind(kind)
+            .status(Status.OK)
+            .startTimestamp(nanoToTimestamp(readableSpan.getStartNanoTime()))
+            .endTimestamp(nanoToTimestamp(readableSpan.getEndNanoTime()))
+            .timedEvents(
+                Arrays.asList(
+                    SpanData.TimedEvent.create(
+                        nanoToTimestamp(clock.nowNanos()),
+                        Event.create("event1", event1Attributes)),
+                    SpanData.TimedEvent.create(
+                        nanoToTimestamp(clock.nowNanos()),
+                        Event.create("event2", event2Attributes))))
+            .resource(resource)
+            .parentSpanId(parentSpanId)
+            .links(links)
+            .context(context)
+            .attributes(attributes)
+            .build();
 
     ReadableSpanAdapter testClass = new ReadableSpanAdapter();
     SpanData result = testClass.adapt(readableSpan);
     assertEquals(expected, result);
   }
-
 }

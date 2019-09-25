@@ -39,15 +39,12 @@ public class ReadableSpanAdapter {
 
   private TimedEvent adaptTimedEvent(io.opentelemetry.sdk.trace.TimedEvent sourceEvent) {
     Timestamp timestamp = nanoToTimestamp(sourceEvent.getNanotime());
-    io.opentelemetry.trace.Event event = Event.create(
-        sourceEvent.getName(), sourceEvent.getAttributes()
-    );
+    io.opentelemetry.trace.Event event =
+        Event.create(sourceEvent.getName(), sourceEvent.getAttributes());
     return TimedEvent.create(timestamp, event);
   }
 
-  private Timestamp nanoToTimestamp(long nanotime) {
-    return Timestamp
-          .create(nanotime / NANOS_PER_SECOND, (int) (nanotime % NANOS_PER_SECOND));
+  static Timestamp nanoToTimestamp(long nanotime) {
+    return Timestamp.create(nanotime / NANOS_PER_SECOND, (int) (nanotime % NANOS_PER_SECOND));
   }
-
 }
