@@ -33,6 +33,8 @@ import io.opentelemetry.trace.SpanId;
 import io.opentelemetry.trace.Status;
 import io.opentelemetry.trace.Tracer;
 import io.opentelemetry.trace.util.Links;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -203,16 +205,9 @@ final class RecordEventsReadableSpan implements ReadableSpan, Span {
     }
   }
 
-  /**
-   * Returns the status of the {@code Span}. If not set defaults to {@link Status#OK}.
-   *
-   * @return the status of the {@code Span}.
-   */
-  @VisibleForTesting
-  Status getStatus() {
-    synchronized (this) {
-      return getStatusWithDefault();
-    }
+  @Override
+  public long getStartNanoTime() {
+    return startNanoTime;
   }
 
   /**
@@ -221,9 +216,43 @@ final class RecordEventsReadableSpan implements ReadableSpan, Span {
    *
    * @return the end nano time.
    */
-  private long getEndNanoTime() {
+  @Override
+  public long getEndNanoTime() {
     synchronized (this) {
       return getEndNanoTimeInternal();
+    }
+  }
+
+  /**
+   * Returns the status of the {@code Span}. If not set defaults to {@link Status#OK}.
+   *
+   * @return the status of the {@code Span}.
+   */
+  @Override
+  public Status getStatus() {
+    synchronized (this) {
+      return getStatusWithDefault();
+    }
+  }
+
+  @Override
+  public List<TimedEvent> getEvents() {
+    synchronized(this){
+      return events == null ? Collections.<TimedEvent>emptyList() : new ArrayList<>(events);
+    }
+  }
+
+  @Override
+  public List<Link> getLinks() {
+    synchronized(this){
+      return links == null ? Collections.<Link>emptyList() : new ArrayList<>(links);
+    }
+  }
+
+  @Override
+  public Map<String, AttributeValue> getAttributes() {
+    synchronized(this){
+      return Collections.unmodifiableMap(getInitializedAttributes());
     }
   }
 
@@ -250,9 +279,19 @@ final class RecordEventsReadableSpan implements ReadableSpan, Span {
    *
    * @return the kind of this {@code Span}.
    */
-  @VisibleForTesting
-  Kind getKind() {
+  @Override
+  public Kind getKind() {
     return kind;
+  }
+
+  @Override
+  public SpanId getParentSpanId() {
+    return parentSpanId;
+  }
+
+  @Override
+  public Resource getResource() {
+    return resource;
   }
 
   /**
