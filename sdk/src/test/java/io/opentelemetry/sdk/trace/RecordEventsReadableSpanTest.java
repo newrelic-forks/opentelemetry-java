@@ -99,9 +99,8 @@ public class RecordEventsReadableSpanTest {
     // Check that adding trace events or update fields after Span#end() does not throw any thrown
     // and are ignored.
     spanDoWork(span, Status.CANCELLED);
-    Span spanProto = span.toSpanProto();
     verifySpanProto(
-        spanProto,
+        span,
         Attributes.getDefaultInstance(),
         TimedEvents.getDefaultInstance(),
         Links.getDefaultInstance(),
@@ -530,7 +529,7 @@ public class RecordEventsReadableSpanTest {
   }
 
   private void verifySpanProto(
-      Span spanProto,
+      ReadableSpan span,
       Attributes attributes,
       TimedEvents timedEvents,
       Links links,
@@ -539,20 +538,20 @@ public class RecordEventsReadableSpanTest {
       Timestamp endTime,
       Status status,
       int childCount) {
-    assertThat(spanProto.getTraceId()).isEqualTo(TraceProtoUtils.toProtoTraceId(traceId));
-    assertThat(spanProto.getSpanId()).isEqualTo(TraceProtoUtils.toProtoSpanId(spanId));
-    assertThat(spanProto.getParentSpanId()).isEqualTo(TraceProtoUtils.toProtoSpanId(parentSpanId));
-    assertThat(spanProto.getTracestate())
-        .isEqualTo(TraceProtoUtils.toProtoTracestate(Tracestate.getDefault()));
-    assertThat(spanProto.getResource()).isEqualTo(TraceProtoUtils.toProtoResource(resource));
-    assertThat(spanProto.getName()).isEqualTo(spanName);
-    assertThat(spanProto.getAttributes()).isEqualTo(attributes);
-    assertThat(spanProto.getTimeEvents()).isEqualTo(timedEvents);
-    assertThat(spanProto.getLinks()).isEqualTo(links);
-    assertThat(spanProto.getStartTime()).isEqualTo(startTime);
-    assertThat(spanProto.getEndTime()).isEqualTo(endTime);
-    assertThat(spanProto.getStatus().getCode()).isEqualTo(status.getCanonicalCode().value());
-    assertThat(spanProto.getChildSpanCount().getValue()).isEqualTo(childCount);
+    assertThat(span.getSpanContext().getTraceId()).isEqualTo(traceId);
+    assertThat(span.getSpanContext().getSpanId()).isEqualTo(spanId);
+    assertThat(span.getParentSpanId()).isEqualTo(parentSpanId);
+    assertThat(span.getSpanContext().getTracestate())
+        .isEqualTo(Tracestate.getDefault());
+    assertThat(span.getResource()).isEqualTo(resource);
+    assertThat(span.getName()).isEqualTo(spanName);
+    assertThat(span.getAttributes()).isEqualTo(attributes);
+    assertThat(span.getEvents()).isEqualTo(timedEvents);
+    assertThat(span.getLinks()).isEqualTo(links);
+    assertThat(span.getStartNanoTime()).isEqualTo(startTime);
+    assertThat(span.getEndNanoTime()).isEqualTo(endTime);
+    assertThat(span.getStatus().getCode()).isEqualTo(status.getCanonicalCode().value());
+    assertThat(span.getChildSpanCount().getValue()).isEqualTo(childCount);
   }
 
   private static final class SimpleEvent implements Event {

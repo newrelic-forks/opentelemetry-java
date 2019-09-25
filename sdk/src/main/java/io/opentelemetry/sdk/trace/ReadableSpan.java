@@ -50,13 +50,6 @@ public interface ReadableSpan {
   String getName();
 
   /**
-   * Returns the proto representation of the collected data for this particular {@code Span}.
-   *
-   * @return the proto representation of the collected data for this particular {@code Span}.
-   */
-  io.opentelemetry.proto.trace.v1.Span toSpanProto();
-
-  /**
    * Returns the value of System.nanoTime() when the span was started.
    *
    * @return Long value representing the System.nanoTime().

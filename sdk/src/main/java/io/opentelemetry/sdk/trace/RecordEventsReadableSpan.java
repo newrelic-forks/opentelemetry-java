@@ -19,7 +19,6 @@ package io.opentelemetry.sdk.trace;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.EvictingQueue;
-import com.google.protobuf.UInt32Value;
 import io.opentelemetry.sdk.internal.Clock;
 import io.opentelemetry.sdk.internal.TimestampConverter;
 import io.opentelemetry.sdk.resources.Resource;
@@ -166,43 +165,6 @@ final class RecordEventsReadableSpan implements ReadableSpan, Span {
   public String getName() {
     synchronized (this) {
       return name;
-    }
-  }
-
-  @Override
-  public io.opentelemetry.proto.trace.v1.Span toSpanProto() {
-    synchronized (this) {
-      io.opentelemetry.proto.trace.v1.Span.Builder builder =
-          io.opentelemetry.proto.trace.v1.Span.newBuilder()
-              .setTraceId(TraceProtoUtils.toProtoTraceId(context.getTraceId()))
-              .setSpanId(TraceProtoUtils.toProtoSpanId(context.getSpanId()))
-              .setTracestate(TraceProtoUtils.toProtoTracestate(context.getTracestate()))
-              .setResource(TraceProtoUtils.toProtoResource(resource))
-              .setName(name)
-              .setKind(TraceProtoUtils.toProtoKind(kind))
-              .setStartTime(timestampConverter.convertNanoTime(startNanoTime))
-              .setEndTime(timestampConverter.convertNanoTime(getEndNanoTime()))
-              .setChildSpanCount(UInt32Value.of(numberOfChildren));
-      if (parentSpanId != null) {
-        builder.setParentSpanId(TraceProtoUtils.toProtoSpanId(parentSpanId));
-      }
-      if (attributes != null) {
-        builder.setAttributes(
-            TraceProtoUtils.toProtoAttributes(
-                attributes, attributes.getNumberOfDroppedAttributes()));
-      }
-      if (events != null) {
-        builder.setTimeEvents(
-            TraceProtoUtils.toProtoTimedEvents(
-                events, totalRecordedEvents - events.size(), timestampConverter));
-      }
-      if (links != null) {
-        builder.setLinks(TraceProtoUtils.toProtoLinks(links, totalRecordedLinks - links.size()));
-      }
-      if (hasBeenEnded) {
-        builder.setStatus(TraceProtoUtils.toProtoStatus(getStatusWithDefault()));
-      }
-      return builder.build();
     }
   }
 
