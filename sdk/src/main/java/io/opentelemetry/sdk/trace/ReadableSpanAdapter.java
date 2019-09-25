@@ -21,6 +21,7 @@ import io.opentelemetry.sdk.trace.export.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanData.Event;
 import io.opentelemetry.sdk.trace.export.SpanData.TimedEvent;
 import io.opentelemetry.sdk.trace.export.SpanData.Timestamp;
+import io.opentelemetry.trace.SpanId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -31,12 +32,14 @@ public class ReadableSpanAdapter {
   private static final long NANOS_PER_SECOND = TimeUnit.SECONDS.toNanos(1);
 
   /**
-   * Converts a ReadableSpan into a new instance of SpanData
+   * Converts a ReadableSpan into a new instance of SpanData.
    *
-   * @param span A ReadableSpan
-   * @return A newly created SpanData instance based on the data in the ReadableSpan
+   * @param span A ReadableSpan.
+   * @return A newly created SpanData instance based on the data in the ReadableSpan.
    */
   public SpanData adapt(ReadableSpan span) {
+    SpanId parentSpanId = span.getParentSpanId();
+    parentSpanId = parentSpanId == null ? SpanId.getInvalid() : parentSpanId;
     return SpanData.newBuilder()
         .name(span.getName())
         .context(span.getSpanContext())
@@ -45,7 +48,7 @@ public class ReadableSpanAdapter {
         .endTimestamp(nanoToTimestamp(span.getEndNanoTime()))
         .kind(span.getKind())
         .links(span.getLinks())
-        .parentSpanId(span.getParentSpanId())
+        .parentSpanId(parentSpanId)
         .resource(span.getResource())
         .status(span.getStatus())
         .timedEvents(adaptTimedEvents(span))

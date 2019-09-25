@@ -22,6 +22,7 @@ import static io.opentelemetry.opentracingshim.testbed.TestUtils.sleep;
 import static org.awaitility.Awaitility.await;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 
@@ -66,7 +67,7 @@ public class ActiveSpanReplacementTest {
 
     // initial task is not related in any way to those two tasks
     assertNotEquals(spans.get(0).getTraceId(), spans.get(1).getTraceId());
-    assertNull(spans.get(0).getParentSpanId());
+    assertFalse(spans.get(0).getParentSpanId().isValid());
 
     assertNull(tracer.scopeManager().activeSpan());
   }
