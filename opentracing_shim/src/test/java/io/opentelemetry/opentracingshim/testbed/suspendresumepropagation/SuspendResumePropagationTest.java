@@ -18,6 +18,7 @@ package io.opentelemetry.opentracingshim.testbed.suspendresumepropagation;
 
 import static com.google.common.truth.Truth.assertThat;
 import static io.opentelemetry.opentracingshim.testbed.TestUtils.createTracerShim;
+import static org.junit.Assert.assertNull;
 
 import io.opentelemetry.sdk.trace.export.InMemorySpanExporter;
 import io.opentelemetry.sdk.trace.export.SpanData;
@@ -61,7 +62,7 @@ public class SuspendResumePropagationTest {
     assertThat(finished.get(0).getName()).isEqualTo("job 1");
     assertThat(finished.get(1).getName()).isEqualTo("job 2");
 
-    assertThat(finished.get(0).getParentSpanId().isValid()).isFalse();
-    assertThat(finished.get(1).getParentSpanId().isValid()).isFalse();
+    assertNull(finished.get(0).getParentSpanId());
+    assertNull(finished.get(1).getParentSpanId());
   }
 }
