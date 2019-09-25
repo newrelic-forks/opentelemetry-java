@@ -45,8 +45,8 @@ public final class SimpleSampledSpansProcessor implements SpanProcessor {
     this(spanExporter, new ReadableSpanAdapter());
   }
 
-  private SimpleSampledSpansProcessor(SpanExporter spanExporter,
-      ReadableSpanAdapter readableSpanAdapter) {
+  private SimpleSampledSpansProcessor(
+      SpanExporter spanExporter, ReadableSpanAdapter readableSpanAdapter) {
     this.spanExporter = Utils.checkNotNull(spanExporter, "spanExporter");
     this.readableSpanAdapter = readableSpanAdapter;
   }
@@ -85,9 +85,7 @@ public final class SimpleSampledSpansProcessor implements SpanProcessor {
     return new Builder(spanExporter);
   }
 
-  /**
-   * Builder class for {@link SimpleSampledSpansProcessor}.
-   */
+  /** Builder class for {@link SimpleSampledSpansProcessor}. */
   public static final class Builder {
 
     private final SpanExporter spanExporter;
@@ -97,7 +95,7 @@ public final class SimpleSampledSpansProcessor implements SpanProcessor {
       this.spanExporter = Utils.checkNotNull(spanExporter, "spanExporter");
     }
 
-    public Builder readableSpanAdapter(ReadableSpanAdapter readableSpanAdapter){
+    public Builder readableSpanAdapter(ReadableSpanAdapter readableSpanAdapter) {
       this.readableSpanAdapter = readableSpanAdapter;
       return this;
     }

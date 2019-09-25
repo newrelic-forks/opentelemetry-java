@@ -27,9 +27,7 @@ import io.opentelemetry.trace.Status;
 import java.util.List;
 import java.util.Map;
 
-/**
- * The extend Span interface used by the SDK.
- */
+/** The extend Span interface used by the SDK. */
 public interface ReadableSpan {
 
   /**

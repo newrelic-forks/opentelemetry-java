@@ -239,21 +239,21 @@ final class RecordEventsReadableSpan implements ReadableSpan, Span {
 
   @Override
   public List<TimedEvent> getEvents() {
-    synchronized(this){
+    synchronized (this) {
       return events == null ? Collections.<TimedEvent>emptyList() : new ArrayList<>(events);
     }
   }
 
   @Override
   public List<Link> getLinks() {
-    synchronized(this){
+    synchronized (this) {
       return links == null ? Collections.<Link>emptyList() : new ArrayList<>(links);
     }
   }
 
   @Override
   public Map<String, AttributeValue> getAttributes() {
-    synchronized(this){
+    synchronized (this) {
       return Collections.unmodifiableMap(getInitializedAttributes());
     }
   }

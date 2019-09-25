@@ -46,6 +46,7 @@ public final class TestUtils {
 
   /**
    * Generates some random attributes used for testing
+   *
    * @return a map of String to AttributeValues
    */
   public static Map<String, AttributeValue> generateRandomAttributes() {
