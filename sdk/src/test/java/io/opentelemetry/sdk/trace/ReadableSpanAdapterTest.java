@@ -1,6 +1,5 @@
 package io.opentelemetry.sdk.trace;
 
-import static io.opentelemetry.sdk.trace.ReadableSpanAdapter.nanoToTimestamp;
 import static org.junit.Assert.assertEquals;
 
 import io.opentelemetry.sdk.internal.Clock;
@@ -9,6 +8,7 @@ import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.trace.config.TraceConfig;
 import io.opentelemetry.sdk.trace.export.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanData.Event;
+import io.opentelemetry.sdk.trace.export.SpanData.Timestamp;
 import io.opentelemetry.trace.AttributeValue;
 import io.opentelemetry.trace.Link;
 import io.opentelemetry.trace.Span.Kind;
@@ -18,18 +18,19 @@ import io.opentelemetry.trace.Status;
 import io.opentelemetry.trace.TraceFlags;
 import io.opentelemetry.trace.TraceId;
 import io.opentelemetry.trace.Tracestate;
-import io.opentelemetry.trace.util.Links;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
 
 @RunWith(JUnit4.class)
 public class ReadableSpanAdapterTest {
+  private static final long NANOS_PER_SECOND = TimeUnit.SECONDS.toNanos(1);
 
   @Test
   public void testAdapt() throws Exception {
@@ -50,7 +51,7 @@ public class ReadableSpanAdapterTest {
     Map<String, AttributeValue> event2Attributes = TestUtils.generateRandomAttributes();
     SpanContext context =
         SpanContext.create(traceId, spanId, TraceFlags.getDefault(), Tracestate.getDefault());
-    Link link1 = Links.create(context, TestUtils.generateRandomAttributes());
+    Link link1 = SpanData.Link.create(context, TestUtils.generateRandomAttributes());
     List<Link> links = Collections.singletonList(link1);
 
     RecordEventsReadableSpan readableSpan =
@@ -95,5 +96,9 @@ public class ReadableSpanAdapterTest {
     ReadableSpanAdapter testClass = new ReadableSpanAdapter();
     SpanData result = testClass.adapt(readableSpan);
     assertEquals(expected, result);
+  }
+
+  private static Timestamp nanoToTimestamp(long nanotime) {
+    return Timestamp.create(nanotime / NANOS_PER_SECOND, (int) (nanotime % NANOS_PER_SECOND));
   }
 }

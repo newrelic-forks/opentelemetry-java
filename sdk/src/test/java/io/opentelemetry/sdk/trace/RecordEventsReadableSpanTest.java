@@ -95,7 +95,7 @@ public class RecordEventsReadableSpanTest {
     // Check that adding trace events or update fields after Span#end() does not throw any thrown
     // and are ignored.
     spanDoWork(span, Status.CANCELLED);
-    verifySpanProto(
+    verifySpan(
         span,
         Collections.<String, AttributeValue>emptyMap(),
         Collections.<TimedEvent>emptyList(),
@@ -121,7 +121,7 @@ public class RecordEventsReadableSpanTest {
       spanDoWork(span, null);
       long timeInNanos = (startTime.getSeconds() + 1) * NANOS_PER_SECOND;
       TimedEvent timedEvent = TimedEvent.create(timeInNanos, event);
-      verifySpanProto(
+      verifySpan(
           span,
           expectedAttributes,
           Collections.singletonList(timedEvent),
@@ -147,7 +147,7 @@ public class RecordEventsReadableSpanTest {
     Mockito.verify(spanProcessor, Mockito.times(1)).onEnd(span);
     long timeInNanos = (startTime.getSeconds() + 1) * NANOS_PER_SECOND;
     TimedEvent timedEvent = TimedEvent.create(timeInNanos, event);
-    verifySpanProto(
+    verifySpan(
         span,
         expectedAttributes,
         Collections.singletonList(timedEvent),
@@ -467,7 +467,7 @@ public class RecordEventsReadableSpanTest {
     }
   }
 
-  private void verifySpanProto(
+  private void verifySpan(
       ReadableSpan span,
       Map<String, AttributeValue> attributes,
       List<TimedEvent> timedEvents,
@@ -486,9 +486,11 @@ public class RecordEventsReadableSpanTest {
     assertThat(span.getAttributes()).isEqualTo(attributes);
     assertThat(span.getEvents()).isEqualTo(timedEvents);
     assertThat(span.getLinks()).isEqualTo(links);
-    assertThat(span.getStartNanoTime()).isEqualTo(startTime);
-    assertThat(span.getEndNanoTime()).isEqualTo(endTime);
-    assertThat(span.getStatus().getCanonicalCode()).isEqualTo(status.getCanonicalCode().value());
+    assertThat(span.getStartNanoTime())
+        .isEqualTo(startTime.getSeconds() * 1_000_000_000 + startTime.getNanos());
+    assertThat(span.getEndNanoTime())
+        .isEqualTo(endTime.getSeconds() * 1_000_000_000 + endTime.getNanos());
+    assertThat(span.getStatus().getCanonicalCode()).isEqualTo(status.getCanonicalCode());
     //    assertThat(span.getChildSpanCount().getValue()).isEqualTo(childCount);
   }
 

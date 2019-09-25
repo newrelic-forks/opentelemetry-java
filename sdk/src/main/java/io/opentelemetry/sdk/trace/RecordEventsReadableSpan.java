@@ -293,7 +293,8 @@ final class RecordEventsReadableSpan implements ReadableSpan, Span {
    * @return the {@code TimestampConverter} used by this {@code Span}.
    */
   @Nullable
-  TimestampConverter getTimestampConverter() {
+  @Override
+  public TimestampConverter getTimestampConverter() {
     return timestampConverter;
   }
 
