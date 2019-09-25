@@ -38,17 +38,17 @@ import java.util.Collection;
 import java.util.Map;
 
 // Utilities to convert Span SDK to proto representation of the Span.
-final class TraceProtoUtils {
+public final class TraceProtoUtils {
 
   private TraceProtoUtils() {}
 
-  static ByteString toProtoTraceId(TraceId traceId) {
+  public static ByteString toProtoTraceId(TraceId traceId) {
     byte[] traceIdBytes = new byte[TraceId.getSize()];
     traceId.copyBytesTo(traceIdBytes, 0);
     return ByteString.copyFrom(traceIdBytes);
   }
 
-  static ByteString toProtoSpanId(SpanId spanId) {
+  public static ByteString toProtoSpanId(SpanId spanId) {
     byte[] spanIdBytes = new byte[SpanId.getSize()];
     spanId.copyBytesTo(spanIdBytes, 0);
     return ByteString.copyFrom(spanIdBytes);
@@ -118,7 +118,7 @@ final class TraceProtoUtils {
     return builder.build();
   }
 
-  static TimedEvents toProtoTimedEvents(
+  public static TimedEvents toProtoTimedEvents(
       Collection<TimedEvent> events, int droppedCount, TimestampConverter converter) {
     TimedEvents.Builder builder = TimedEvents.newBuilder();
     builder.setDroppedTimedEventsCount(droppedCount);
@@ -171,7 +171,7 @@ final class TraceProtoUtils {
     return builder.build();
   }
 
-  static Timestamp toProtoTimestamp(io.opentelemetry.trace.Timestamp timestamp) {
+  public static Timestamp toProtoTimestamp(io.opentelemetry.trace.Timestamp timestamp) {
     return Timestamp.newBuilder()
         .setSeconds(timestamp.getSeconds())
         .setNanos(timestamp.getNanos())

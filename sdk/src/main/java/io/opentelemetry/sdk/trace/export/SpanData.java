@@ -19,6 +19,7 @@ package io.opentelemetry.sdk.trace.export;
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.internal.Utils;
 import io.opentelemetry.sdk.resources.Resource;
+import io.opentelemetry.sdk.trace.export.AutoValue_SpanData.Builder;
 import io.opentelemetry.trace.AttributeValue;
 import io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.trace.SpanContext;
@@ -403,7 +404,7 @@ public abstract class SpanData {
   }
 
   public static Builder newBuilder() {
-    return AutoValue_SpanData.newBuilder();
+    return new AutoValue_SpanData.Builder();
   }
 
   @AutoValue.Builder
