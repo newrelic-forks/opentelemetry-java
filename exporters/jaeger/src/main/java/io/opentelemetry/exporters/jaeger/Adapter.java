@@ -79,7 +79,7 @@ final class Adapter {
     target.addAllReferences(toSpanRefs(span.getLinks()));
 
     // add the parent span
-    if (span.getParentSpanId() != null) {
+    if (span.getParentSpanId().isValid()) {
       target.addReferences(
           Model.SpanRef.newBuilder()
               .setTraceId(TraceProtoUtils.toProtoTraceId(span.getTraceId()))

@@ -76,7 +76,7 @@ public abstract class SpanData {
       Timestamp endTimestamp) {
     return AutoValue_SpanData.newBuilder()
         .context(context)
-        .parentSpanId(parentSpanId)
+        .parentSpanId(parentSpanId == null ? SpanId.getInvalid() : parentSpanId)
         .resource(resource)
         .name(name)
         .kind(kind)
@@ -102,12 +102,12 @@ public abstract class SpanData {
   public abstract SpanContext getContext();
 
   /**
-   * Returns the parent {@code SpanId} or {@code null} if the {@code Span} is a root {@code Span}.
+   * Returns the parent {@code SpanId}. If the {@code Span} is a root {@code Span}, the SpanId
+   * returned will be invalid..
    *
-   * @return the parent {@code SpanId} or {@code null} if the {@code Span} is a root {@code Span}.
+   * @return the parent {@code SpanId} or an invalid SpanId if this is a root {@code Span}.
    * @since 0.1.0
    */
-  @Nullable
   public abstract SpanId getParentSpanId();
 
   /**

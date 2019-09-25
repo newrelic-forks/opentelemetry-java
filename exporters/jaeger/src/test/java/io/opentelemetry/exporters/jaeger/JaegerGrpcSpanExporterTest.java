@@ -103,6 +103,7 @@ public class JaegerGrpcSpanExporterTest {
             .resource(Resource.create(Collections.<String, String>emptyMap()))
             .kind(Kind.CONSUMER)
             .links(Collections.<Link>emptyList())
+            .parentSpanId(SpanId.getInvalid())
             .build();
 
     // test
