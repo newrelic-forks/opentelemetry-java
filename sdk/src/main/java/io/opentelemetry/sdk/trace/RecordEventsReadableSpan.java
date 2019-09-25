@@ -137,7 +137,7 @@ final class RecordEventsReadableSpan implements ReadableSpan, Span {
             context,
             name,
             kind,
-            parentSpanId,
+            parentSpanId == null ? SpanId.getInvalid() : parentSpanId,
             traceConfig,
             spanProcessor,
             timestampConverter,
@@ -275,7 +275,6 @@ final class RecordEventsReadableSpan implements ReadableSpan, Span {
    *
    * @return The span id of the parent span.
    */
-  @Nullable
   @Override
   public SpanId getParentSpanId() {
     return parentSpanId;
