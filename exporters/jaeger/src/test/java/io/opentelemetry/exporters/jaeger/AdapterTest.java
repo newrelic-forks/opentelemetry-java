@@ -16,8 +16,6 @@
 
 package io.opentelemetry.exporters.jaeger;
 
-import static io.opentelemetry.sdk.trace.export.SpanData.TimedEvent;
-import static io.opentelemetry.sdk.trace.export.SpanData.newBuilder;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -28,6 +26,7 @@ import io.opentelemetry.sdk.trace.TraceProtoUtils;
 import io.opentelemetry.sdk.trace.export.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanData.Event;
 import io.opentelemetry.sdk.trace.export.SpanData.Link;
+import io.opentelemetry.sdk.trace.export.SpanData.TimedEvent;
 import io.opentelemetry.sdk.trace.export.SpanData.Timestamp;
 import io.opentelemetry.trace.AttributeValue;
 import io.opentelemetry.trace.Span;
@@ -45,6 +44,12 @@ import javax.annotation.Nullable;
 import org.junit.Test;
 
 public class AdapterTest {
+
+  private static final String LINK_TRACE_ID = "00000000000000000000000000cba123";
+  private static final String LINK_SPAN_ID = "0000000000fed456";
+  private static final String TRACE_ID = "00000000000000000000000000abc123";
+  private static final String SPAN_ID = "0000000000def456";
+  private static final String PARENT_SPAN_ID = "0000000000aef789";
 
   @Test
   public void testProtoSpans() {
@@ -72,7 +77,6 @@ public class AdapterTest {
     Timestamp endTime = toTimestamp(endMs);
 
     SpanData span = getSpanData(startTime, endTime);
-
 
     // test
     Model.Span jaegerSpan = Adapter.toJaeger(span);
@@ -169,7 +173,9 @@ public class AdapterTest {
   @Test
   public void testSpanRefs() {
     // prepare
-    io.opentelemetry.trace.Link link = SpanData.Link.create(createSpanContext("00000000000000000000000000cba123", "0000000000fed456"));
+    io.opentelemetry.trace.Link link =
+        SpanData.Link.create(
+            createSpanContext("00000000000000000000000000cba123", "0000000000fed456"));
 
     // test
     Collection<Model.SpanRef> spanRefs = Adapter.toSpanRefs(Collections.singletonList(link));
@@ -181,14 +187,16 @@ public class AdapterTest {
   @Test
   public void testSpanRef() {
     // prepare
-    io.opentelemetry.trace.Link link = SpanData.Link.create(createSpanContext("00000000000000000000000000abc123", "0000000000def456"));
+    io.opentelemetry.trace.Link link = SpanData.Link.create(createSpanContext(TRACE_ID, SPAN_ID));
 
     // test
     Model.SpanRef spanRef = Adapter.toSpanRef(link);
 
     // verify
-    assertEquals("abc123", spanRef.getSpanId().toStringUtf8());
-    assertEquals("def456", spanRef.getTraceId().toStringUtf8());
+    assertEquals(
+        TraceProtoUtils.toProtoSpanId(SpanId.fromLowerBase16(SPAN_ID, 0)), spanRef.getSpanId());
+    assertEquals(
+        TraceProtoUtils.toProtoTraceId(TraceId.fromLowerBase16(TRACE_ID, 0)), spanRef.getTraceId());
     assertEquals(Model.SpanRefType.FOLLOWS_FROM, spanRef.getRefType());
   }
 
@@ -207,11 +215,11 @@ public class AdapterTest {
         ImmutableMap.<String, io.opentelemetry.trace.AttributeValue>of("valueB", valueB);
 
     io.opentelemetry.trace.Link link =
-        Link.create(createSpanContext("00000000000000000000000000cba123", "0000000000fed456"), attributes);
+        Link.create(createSpanContext(LINK_TRACE_ID, LINK_SPAN_ID), attributes);
 
-    return newBuilder()
-        .context(createSpanContext("00000000000000000000000000abc123", "0000000000def456"))
-        .parentSpanId(SpanId.fromLowerBase16("0000000000aef789", 0))
+    return SpanData.newBuilder()
+        .context(createSpanContext(TRACE_ID, SPAN_ID))
+        .parentSpanId(SpanId.fromLowerBase16(PARENT_SPAN_ID, 0))
         .name("GET /api/endpoint")
         .startTimestamp(startTime)
         .endTimestamp(endTime)
@@ -224,7 +232,7 @@ public class AdapterTest {
         .build();
   }
 
-  private SpanContext createSpanContext(String traceId, String spanId) {
+  private static SpanContext createSpanContext(String traceId, String spanId) {
     return SpanContext.create(
         TraceId.fromLowerBase16(traceId, 0),
         SpanId.fromLowerBase16(spanId, 0),
@@ -250,8 +258,12 @@ public class AdapterTest {
     boolean found = false;
     for (Model.SpanRef spanRef : jaegerSpan.getReferencesList()) {
       if (Model.SpanRefType.FOLLOWS_FROM.equals(spanRef.getRefType())) {
-        assertEquals("parent123", spanRef.getTraceId().toStringUtf8());
-        assertEquals("parent456", spanRef.getSpanId().toStringUtf8());
+        assertEquals(
+            TraceProtoUtils.toProtoTraceId(TraceId.fromLowerBase16(LINK_TRACE_ID, 0)),
+            spanRef.getTraceId());
+        assertEquals(
+            TraceProtoUtils.toProtoSpanId(SpanId.fromLowerBase16(LINK_SPAN_ID, 0)),
+            spanRef.getSpanId());
         found = true;
       }
     }
@@ -262,8 +274,12 @@ public class AdapterTest {
     boolean found = false;
     for (Model.SpanRef spanRef : jaegerSpan.getReferencesList()) {
       if (Model.SpanRefType.CHILD_OF.equals(spanRef.getRefType())) {
-        assertEquals("abc123", spanRef.getTraceId().toStringUtf8());
-        assertEquals("parent789", spanRef.getSpanId().toStringUtf8());
+        assertEquals(
+            TraceProtoUtils.toProtoTraceId(TraceId.fromLowerBase16(TRACE_ID, 0)),
+            spanRef.getTraceId());
+        assertEquals(
+            TraceProtoUtils.toProtoSpanId(SpanId.fromLowerBase16(PARENT_SPAN_ID, 0)),
+            spanRef.getSpanId());
         found = true;
       }
     }

@@ -71,31 +71,31 @@ final class Adapter {
     target.setOperationName(span.getName());
     Timestamp startTimestamp = toProtoTimestamp(span.getStartTimestamp());
     target.setStartTime(startTimestamp);
-    target.setDuration(Timestamps.between(startTimestamp, toProtoTimestamp(span.getEndTimestamp())));
+    target.setDuration(
+        Timestamps.between(startTimestamp, toProtoTimestamp(span.getEndTimestamp())));
 
     target.addAllTags(toKeyValues(span.getAttributes()));
     target.addAllLogs(toJaegerLogs(span.getTimedEvents()));
     target.addAllReferences(toSpanRefs(span.getLinks()));
 
     // add the parent span
-    target.addReferences(
-        Model.SpanRef.newBuilder()
-            .setTraceId(TraceProtoUtils.toProtoTraceId(span.getTraceId()))
-            .setSpanId(TraceProtoUtils.toProtoSpanId(span.getParentSpanId()))
-            .setRefType(Model.SpanRefType.CHILD_OF));
+    if (span.getParentSpanId() != null) {
+      target.addReferences(
+          Model.SpanRef.newBuilder()
+              .setTraceId(TraceProtoUtils.toProtoTraceId(span.getTraceId()))
+              .setSpanId(TraceProtoUtils.toProtoSpanId(span.getParentSpanId()))
+              .setRefType(Model.SpanRefType.CHILD_OF));
+    }
 
     if (span.getKind() != null) {
       target.addTags(
-          Model.KeyValue.newBuilder()
-              .setKey(KEY_SPAN_KIND)
-              .setVStr(span.getKind().name())
-              .build());
+          Model.KeyValue.newBuilder().setKey(KEY_SPAN_KIND).setVStr(span.getKind().name()).build());
     }
 
     target.addTags(
         Model.KeyValue.newBuilder()
             .setKey(KEY_SPAN_STATUS_MESSAGE)
-            .setVStr(span.getStatus().getCanonicalCode().name())
+            .setVStr(span.getStatus().isOk() ? "" : span.getStatus().getDescription())
             .build());
 
     target.addTags(
@@ -143,7 +143,10 @@ final class Adapter {
 
     // name is a top-level property in OpenTelemetry
     builder.addFields(
-        Model.KeyValue.newBuilder().setKey(KEY_LOG_MESSAGE).setVStr(timedEvent.getEvent().getName()).build());
+        Model.KeyValue.newBuilder()
+            .setKey(KEY_LOG_MESSAGE)
+            .setVStr(timedEvent.getEvent().getName())
+            .build());
     builder.addAllFields(toKeyValues(timedEvent.getEvent().getAttributes()));
 
     return builder.build();
@@ -157,7 +160,8 @@ final class Adapter {
    * @see #toKeyValue(String, io.opentelemetry.trace.AttributeValue)
    */
   @VisibleForTesting
-  static Collection<Model.KeyValue> toKeyValues(Map<String, io.opentelemetry.trace.AttributeValue> attributes) {
+  static Collection<Model.KeyValue> toKeyValues(
+      Map<String, io.opentelemetry.trace.AttributeValue> attributes) {
     ArrayList<Model.KeyValue> tags = new ArrayList<>(attributes.size());
     for (Entry<String, io.opentelemetry.trace.AttributeValue> entry : attributes.entrySet()) {
       tags.add(toKeyValue(entry.getKey(), entry.getValue()));
@@ -166,7 +170,8 @@ final class Adapter {
   }
 
   /**
-   * Converts the given key and {@link io.opentelemetry.trace.AttributeValue} into Jaeger's {@link Model.KeyValue}.
+   * Converts the given key and {@link io.opentelemetry.trace.AttributeValue} into Jaeger's {@link
+   * Model.KeyValue}.
    *
    * @param key the entry key as string
    * @param value the entry value

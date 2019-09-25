@@ -271,7 +271,7 @@ public final class BatchSampledSpansProcessor implements SpanProcessor {
       }
     }
 
-    private void createSpanDataForExport(
+    private static void createSpanDataForExport(
         List<ReadableSpan> spanList,
         ArrayList<SpanData> spanDataBuffer,
         int startIndex,
@@ -283,8 +283,8 @@ public final class BatchSampledSpansProcessor implements SpanProcessor {
       }
     }
 
-    private SpanData makeSpanData(ReadableSpan readableSpan) {
-      throw new UnsupportedOperationException("implement me");
+    private static SpanData makeSpanData(ReadableSpan readableSpan) {
+      throw new UnsupportedOperationException("implement me" + readableSpan);
     }
 
     // Exports the list of Span protos to all the ServiceHandlers.
