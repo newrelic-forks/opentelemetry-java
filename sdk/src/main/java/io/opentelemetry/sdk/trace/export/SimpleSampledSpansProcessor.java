@@ -41,10 +41,6 @@ public final class SimpleSampledSpansProcessor implements SpanProcessor {
   private final SpanExporter spanExporter;
   private final ReadableSpanAdapter readableSpanAdapter;
 
-  private SimpleSampledSpansProcessor(SpanExporter spanExporter) {
-    this(spanExporter, new ReadableSpanAdapter());
-  }
-
   private SimpleSampledSpansProcessor(
       SpanExporter spanExporter, ReadableSpanAdapter readableSpanAdapter) {
     this.spanExporter = Utils.checkNotNull(spanExporter, "spanExporter");
@@ -111,7 +107,7 @@ public final class SimpleSampledSpansProcessor implements SpanProcessor {
      * @throws NullPointerException if the {@code spanExporter} is {@code null}.
      */
     public SimpleSampledSpansProcessor build() {
-      return new SimpleSampledSpansProcessor(spanExporter);
+      return new SimpleSampledSpansProcessor(spanExporter, readableSpanAdapter);
     }
   }
 }

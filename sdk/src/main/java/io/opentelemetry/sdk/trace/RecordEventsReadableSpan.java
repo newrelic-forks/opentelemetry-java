@@ -286,6 +286,7 @@ final class RecordEventsReadableSpan implements ReadableSpan, Span {
     return kind;
   }
 
+  @Nullable
   @Override
   public SpanId getParentSpanId() {
     return parentSpanId;
