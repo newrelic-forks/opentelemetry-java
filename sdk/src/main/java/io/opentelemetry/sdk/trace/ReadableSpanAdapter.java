@@ -1,5 +1,6 @@
 package io.opentelemetry.sdk.trace;
 
+import com.google.common.annotations.VisibleForTesting;
 import io.opentelemetry.sdk.trace.export.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanData.Event;
 import io.opentelemetry.sdk.trace.export.SpanData.TimedEvent;
@@ -8,10 +9,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+/** An adapter that can convert a ReadableSpan into a SpanData. */
 public class ReadableSpanAdapter {
 
   private static final long NANOS_PER_SECOND = TimeUnit.SECONDS.toNanos(1);
 
+  /**
+   * Converts a ReadableSpan into a new instance of SpanData
+   *
+   * @param span A ReadableSpan
+   * @return A newly created SpanData instance based on the data in the ReadableSpan
+   */
   public SpanData adapt(ReadableSpan span) {
     return SpanData.newBuilder()
         .name(span.getName())
@@ -44,6 +52,7 @@ public class ReadableSpanAdapter {
     return TimedEvent.create(timestamp, event);
   }
 
+  @VisibleForTesting
   static Timestamp nanoToTimestamp(long nanotime) {
     return Timestamp.create(nanotime / NANOS_PER_SECOND, (int) (nanotime % NANOS_PER_SECOND));
   }
