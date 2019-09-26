@@ -51,8 +51,8 @@ final class RecordEventsReadableSpan implements ReadableSpan, Span {
 
   // Contains the identifiers associated with this Span.
   private final SpanContext context;
-  // The parent SpanId of this span. Null if this is a root span.
-  @Nullable private final SpanId parentSpanId;
+  // The parent SpanId of this span. non-valid if this is a root span.
+  private final SpanId parentSpanId;
   // Active trace configs when the Span was created.
   private final TraceConfig traceConfig;
   // Handler called when the span starts and ends.
@@ -508,7 +508,7 @@ final class RecordEventsReadableSpan implements ReadableSpan, Span {
       SpanContext context,
       String name,
       Kind kind,
-      @Nullable SpanId parentSpanId,
+      SpanId parentSpanId,
       TraceConfig traceConfig,
       SpanProcessor spanProcessor,
       @Nullable TimestampConverter timestampConverter,
@@ -546,5 +546,33 @@ final class RecordEventsReadableSpan implements ReadableSpan, Span {
       }
     }
     super.finalize();
+  }
+
+  @VisibleForTesting
+  int getTotalRecordedEvents() {
+    synchronized (this) {
+      return totalRecordedEvents;
+    }
+  }
+
+  @VisibleForTesting
+  int getTotalRecordedLinks() {
+    synchronized (this) {
+      return totalRecordedLinks;
+    }
+  }
+
+  @VisibleForTesting
+  int getNumberOfChildren() {
+    synchronized (this) {
+      return numberOfChildren;
+    }
+  }
+
+  @VisibleForTesting
+  AttributesWithCapacity getRawAttributes() {
+    synchronized (this) {
+      return getInitializedAttributes();
+    }
   }
 }
