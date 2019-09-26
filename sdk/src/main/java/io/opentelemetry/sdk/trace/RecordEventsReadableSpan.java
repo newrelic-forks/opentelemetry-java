@@ -206,7 +206,7 @@ final class RecordEventsReadableSpan implements ReadableSpan, Span {
    * @return The TimedEvents for this span.
    */
   @Override
-  public List<TimedEvent> getEvents() {
+  public List<TimedEvent> getTimedEvents() {
     synchronized (this) {
       return events == null ? Collections.<TimedEvent>emptyList() : new ArrayList<>(events);
     }
@@ -282,6 +282,11 @@ final class RecordEventsReadableSpan implements ReadableSpan, Span {
     return parentSpanId;
   }
 
+  /**
+   * Returns the resource associated with this span.
+   *
+   * @return The {@code Resource} that created this span.
+   */
   @Override
   public Resource getResource() {
     return resource;
@@ -558,5 +563,15 @@ final class RecordEventsReadableSpan implements ReadableSpan, Span {
   @VisibleForTesting
   public int getDroppedLinksCount() {
     return totalRecordedLinks - links.size();
+  }
+
+  @VisibleForTesting
+  int getDroppedAttributesCount() {
+    return getRawAttributes().getNumberOfDroppedAttributes();
+  }
+
+  @VisibleForTesting
+  int getDroppedTimedEventsCount() {
+    return getTotalRecordedEvents() - getTimedEvents().size();
   }
 }

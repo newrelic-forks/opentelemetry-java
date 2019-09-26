@@ -56,7 +56,7 @@ public class ReadableSpanAdapter {
   }
 
   private static List<TimedEvent> adaptTimedEvents(ReadableSpan span) {
-    List<io.opentelemetry.sdk.trace.TimedEvent> sourceEvents = span.getEvents();
+    List<io.opentelemetry.sdk.trace.TimedEvent> sourceEvents = span.getTimedEvents();
     List<TimedEvent> result = new ArrayList<>(sourceEvents.size());
     for (io.opentelemetry.sdk.trace.TimedEvent sourceEvent : sourceEvents) {
       result.add(adaptTimedEvent(sourceEvent, span.getTimestampConverter()));

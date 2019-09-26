@@ -107,7 +107,7 @@ public interface ReadableSpan {
    * @return A list of TimedEvents.
    * @since 0.1.0
    */
-  List<TimedEvent> getEvents();
+  List<TimedEvent> getTimedEvents();
 
   /**
    * Returns a copy of the links in this span. The list must be a copy that does not leak out the

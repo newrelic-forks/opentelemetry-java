@@ -266,7 +266,7 @@ public class RecordEventsReadableSpanTest {
     } finally {
       span.end();
     }
-    assertThat(span.getEvents().size()).isEqualTo(3);
+    assertThat(span.getTimedEvents().size()).isEqualTo(3);
   }
 
   @Test
@@ -282,6 +282,7 @@ public class RecordEventsReadableSpanTest {
       for (int i = 0; i < 2 * maxNumberOfAttributes; i++) {
         span.setAttribute("MyStringAttributeKey" + i, AttributeValue.longAttributeValue(i));
       }
+      assertThat(span.getDroppedAttributesCount()).isEqualTo(maxNumberOfAttributes);
       assertThat(span.getAttributes().size()).isEqualTo(maxNumberOfAttributes);
       for (int i = 0; i < maxNumberOfAttributes; i++) {
         AttributeValue expectedValue = AttributeValue.longAttributeValue(i + maxNumberOfAttributes);
@@ -291,6 +292,7 @@ public class RecordEventsReadableSpanTest {
     } finally {
       span.end();
     }
+    assertThat(span.getDroppedAttributesCount()).isEqualTo(maxNumberOfAttributes);
     assertThat(span.getAttributes().size()).isEqualTo(maxNumberOfAttributes);
     for (int i = 0; i < maxNumberOfAttributes; i++) {
       AttributeValue expectedValue = AttributeValue.longAttributeValue(i + maxNumberOfAttributes);
@@ -312,6 +314,7 @@ public class RecordEventsReadableSpanTest {
       for (int i = 0; i < 2 * maxNumberOfAttributes; i++) {
         span.setAttribute("MyStringAttributeKey" + i, AttributeValue.longAttributeValue(i));
       }
+      assertThat(span.getDroppedAttributesCount()).isEqualTo(maxNumberOfAttributes);
       assertThat(span.getAttributes().size()).isEqualTo(maxNumberOfAttributes);
       for (int i = 0; i < maxNumberOfAttributes; i++) {
         AttributeValue expectedValue = AttributeValue.longAttributeValue(i + maxNumberOfAttributes);
@@ -323,7 +326,8 @@ public class RecordEventsReadableSpanTest {
         span.setAttribute("MyStringAttributeKey" + i, AttributeValue.longAttributeValue(i));
       }
       assertThat(span.getAttributes().size()).isEqualTo(maxNumberOfAttributes);
-      assertThat(span.getRawAttributes().getNumberOfDroppedAttributes()).isEqualTo(12);
+      assertThat(span.getRawAttributes().getNumberOfDroppedAttributes())
+          .isEqualTo(maxNumberOfAttributes * 3 / 2);
       // Test that we still have in the attributes map the latest maxNumberOfAttributes / 2 entries.
       for (int i = 0; i < maxNumberOfAttributes / 2; i++) {
         int val = i + maxNumberOfAttributes * 3 / 2;
@@ -351,18 +355,20 @@ public class RecordEventsReadableSpanTest {
         span.addEvent(event);
         testClock.advanceMillis(MILLIS_PER_SECOND);
       }
-      assertThat(span.getEvents().size()).isEqualTo(maxNumberOfEvents);
+      assertThat(span.getDroppedTimedEventsCount()).isEqualTo(maxNumberOfEvents);
+      assertThat(span.getTimedEvents().size()).isEqualTo(maxNumberOfEvents);
       for (int i = 0; i < maxNumberOfEvents; i++) {
         long timeInNanos = (startTime.getSeconds() + maxNumberOfEvents + i) * NANOS_PER_SECOND;
-        assertThat(span.getEvents().get(i)).isEqualTo(TimedEvent.create(timeInNanos, event));
+        assertThat(span.getTimedEvents().get(i)).isEqualTo(TimedEvent.create(timeInNanos, event));
       }
     } finally {
       span.end();
     }
-    assertThat(span.getEvents().size()).isEqualTo(maxNumberOfEvents);
+    assertThat(span.getDroppedTimedEventsCount()).isEqualTo(maxNumberOfEvents);
+    assertThat(span.getTimedEvents().size()).isEqualTo(maxNumberOfEvents);
     for (int i = 0; i < maxNumberOfEvents; i++) {
       long timeInNanos = (startTime.getSeconds() + maxNumberOfEvents + i) * NANOS_PER_SECOND;
-      assertThat(span.getEvents().get(i)).isEqualTo(TimedEvent.create(timeInNanos, event));
+      assertThat(span.getTimedEvents().get(i)).isEqualTo(TimedEvent.create(timeInNanos, event));
     }
   }
 
@@ -449,7 +455,7 @@ public class RecordEventsReadableSpanTest {
     assertThat(span.getResource()).isEqualTo(resource);
     assertThat(span.getName()).isEqualTo(spanName);
     assertThat(span.getAttributes()).isEqualTo(attributes);
-    assertThat(span.getEvents()).isEqualTo(timedEvents);
+    assertThat(span.getTimedEvents()).isEqualTo(timedEvents);
     assertThat(span.getLinks()).isEqualTo(links);
     assertThat(span.getStartNanoTime())
         .isEqualTo(startTime.getSeconds() * 1_000_000_000 + startTime.getNanos());
