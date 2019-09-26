@@ -115,7 +115,7 @@ public class RecordEventsReadableSpanTest {
   }
 
   @Test
-  public void toSpanProto_ActiveSpan() {
+  public void activeSpanState() {
     RecordEventsReadableSpan span = createTestSpan(Kind.INTERNAL);
     try {
       spanDoWork(span, null);
@@ -137,7 +137,7 @@ public class RecordEventsReadableSpanTest {
   }
 
   @Test
-  public void toSpanProto_EndedSpan() {
+  public void endedSpanState() {
     RecordEventsReadableSpan span = createTestSpan(Kind.INTERNAL);
     try {
       spanDoWork(span, Status.CANCELLED);
@@ -160,7 +160,7 @@ public class RecordEventsReadableSpanTest {
   }
 
   @Test
-  public void toSpanProto_RootSpan() {
+  public void rootSpan() {
     RecordEventsReadableSpan span = createTestRootSpan();
     try {
       spanDoWork(span, null);
@@ -171,7 +171,7 @@ public class RecordEventsReadableSpanTest {
   }
 
   @Test
-  public void toSpanProto_WithInitialAttributes() {
+  public void initialAttributes() {
     RecordEventsReadableSpan span = createTestSpanWithAttributes(attributes);
     span.end();
     assertThat(span.getAttributes().size()).isEqualTo(attributes.size());
