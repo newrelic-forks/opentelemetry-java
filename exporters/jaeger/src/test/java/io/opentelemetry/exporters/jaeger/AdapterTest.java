@@ -22,7 +22,6 @@ import static org.junit.Assert.assertTrue;
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.exporters.jaeger.proto.api_v2.Model;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.sdk.trace.TraceProtoUtils;
 import io.opentelemetry.sdk.trace.export.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanData.Event;
 import io.opentelemetry.sdk.trace.export.SpanData.Link;

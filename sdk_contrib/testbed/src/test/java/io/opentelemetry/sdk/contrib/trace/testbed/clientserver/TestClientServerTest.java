@@ -21,11 +21,11 @@ import static org.awaitility.Awaitility.await;
 import static org.hamcrest.core.IsEqual.equalTo;
 import static org.junit.Assert.assertEquals;
 
-import io.opentelemetry.proto.trace.v1.Span.SpanKind;
 import io.opentelemetry.sdk.contrib.trace.testbed.TestUtils;
 import io.opentelemetry.sdk.trace.export.InMemorySpanExporter;
 import io.opentelemetry.sdk.trace.export.SpanData;
 import io.opentelemetry.trace.DefaultSpan;
+import io.opentelemetry.trace.Span.Kind;
 import io.opentelemetry.trace.Tracer;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -66,8 +66,8 @@ public class TestClientServerTest {
     finished = TestUtils.sortByStartTime(finished);
     assertThat(finished.get(0).getContext().getTraceId())
         .isEqualTo(finished.get(1).getContext().getTraceId());
-    assertThat(finished.get(0).getKind()).isEqualTo(SpanKind.CLIENT);
-    assertThat(finished.get(1).getKind()).isEqualTo(SpanKind.SERVER);
+    assertThat(finished.get(0).getKind()).isEqualTo(Kind.CLIENT);
+    assertThat(finished.get(1).getKind()).isEqualTo(Kind.SERVER);
 
     assertThat(tracer.getCurrentSpan()).isSameInstanceAs(DefaultSpan.getInvalid());
   }

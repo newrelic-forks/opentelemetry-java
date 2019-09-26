@@ -18,6 +18,7 @@ package io.opentelemetry.sdk.trace.export;
 
 import static com.google.common.truth.Truth.assertThat;
 
+import io.opentelemetry.sdk.trace.TestUtils;
 import io.opentelemetry.sdk.trace.TracerSdk;
 import io.opentelemetry.sdk.trace.export.SpanExporter.ResultCode;
 import java.util.Collections;
@@ -83,15 +84,15 @@ public class InMemorySpanExporterTest {
 
   @Test
   public void export_ReturnCode() {
-    assertThat(exporter.export(Collections.singletonList(SpanData.newBuilder().build())))
+    assertThat(exporter.export(Collections.singletonList(TestUtils.makeBasicSpan())))
         .isEqualTo(ResultCode.SUCCESS);
     exporter.shutdown();
     // After shutdown no more export.
-    assertThat(exporter.export(Collections.singletonList(SpanData.newBuilder().build())))
+    assertThat(exporter.export(Collections.singletonList(TestUtils.makeBasicSpan())))
         .isEqualTo(ResultCode.FAILED_NOT_RETRYABLE);
     exporter.reset();
     // Reset does not do anything if already shutdown.
-    assertThat(exporter.export(Collections.singletonList(SpanData.newBuilder().build())))
+    assertThat(exporter.export(Collections.singletonList(TestUtils.makeBasicSpan())))
         .isEqualTo(ResultCode.FAILED_NOT_RETRYABLE);
   }
 }

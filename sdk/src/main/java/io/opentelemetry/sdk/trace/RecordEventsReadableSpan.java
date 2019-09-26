@@ -542,4 +542,11 @@ final class RecordEventsReadableSpan implements ReadableSpan, Span {
       return getInitializedAttributes();
     }
   }
+
+  @Override
+  public int getChildSpanCount() {
+    synchronized (this) {
+      return numberOfChildren;
+    }
+  }
 }

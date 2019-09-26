@@ -22,6 +22,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.opentelemetry.sdk.trace.TestUtils;
 import io.opentelemetry.sdk.trace.export.SpanExporter.ResultCode;
 import java.util.Arrays;
 import java.util.Collections;
@@ -40,7 +41,7 @@ public class MultiSpanExporterTest {
   @Mock private SpanExporter spanExporter1;
   @Mock private SpanExporter spanExporter2;
   private static final List<SpanData> SPAN_LIST =
-      Collections.singletonList(SpanData.newBuilder().build());
+      Collections.singletonList(TestUtils.makeBasicSpan());
 
   @Before
   public void setUp() {

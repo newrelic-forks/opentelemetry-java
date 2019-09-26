@@ -56,7 +56,15 @@ public class TimestampConverter {
     this.nanoTime = nanoTime;
   }
 
+  /**
+   * Converts a {@link System#nanoTime() nanoTime} value to {@link SpanData.Timestamp}.
+   *
+   * @param nanoTime value to convert.
+   * @return the {@code SpanData.Timestamp} representation of the {@code time}.
+   */
   public SpanData.Timestamp convertNanoTime(long nanoTime) {
-    return SpanData.Timestamp.create(timestamp.getSeconds(), (int) (nanoTime - this.nanoTime));
+    // todo: implement this without going through the protobuf intermediary.
+    Timestamp protoVersion = convertNanoTimeProto(nanoTime);
+    return SpanData.Timestamp.create(protoVersion.getSeconds(), protoVersion.getNanos());
   }
 }
