@@ -23,6 +23,7 @@ import io.opentelemetry.exporters.jaeger.proto.api_v2.Model;
 import io.opentelemetry.proto.trace.v1.Span;
 import io.opentelemetry.sdk.trace.export.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanData.TimedEvent;
+import io.opentelemetry.trace.AttributeValue;
 import io.opentelemetry.trace.Link;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -156,28 +157,26 @@ final class Adapter {
    *
    * @param attributes the span attributes
    * @return a collection of Jaeger key values
-   * @see #toKeyValue(String, io.opentelemetry.trace.AttributeValue)
+   * @see #toKeyValue(String, AttributeValue)
    */
   @VisibleForTesting
-  static Collection<Model.KeyValue> toKeyValues(
-      Map<String, io.opentelemetry.trace.AttributeValue> attributes) {
+  static Collection<Model.KeyValue> toKeyValues(Map<String, AttributeValue> attributes) {
     ArrayList<Model.KeyValue> tags = new ArrayList<>(attributes.size());
-    for (Entry<String, io.opentelemetry.trace.AttributeValue> entry : attributes.entrySet()) {
+    for (Entry<String, AttributeValue> entry : attributes.entrySet()) {
       tags.add(toKeyValue(entry.getKey(), entry.getValue()));
     }
     return tags;
   }
 
   /**
-   * Converts the given key and {@link io.opentelemetry.trace.AttributeValue} into Jaeger's {@link
-   * Model.KeyValue}.
+   * Converts the given key and {@link AttributeValue} into Jaeger's {@link Model.KeyValue}.
    *
    * @param key the entry key as string
    * @param value the entry value
    * @return a Jaeger key value
    */
   @VisibleForTesting
-  static Model.KeyValue toKeyValue(String key, io.opentelemetry.trace.AttributeValue value) {
+  static Model.KeyValue toKeyValue(String key, AttributeValue value) {
     Model.KeyValue.Builder builder = Model.KeyValue.newBuilder();
     builder.setKey(key);
 
