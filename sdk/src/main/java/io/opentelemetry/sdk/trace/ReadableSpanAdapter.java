@@ -51,16 +51,15 @@ public class ReadableSpanAdapter {
         .parentSpanId(parentSpanId)
         .resource(span.getResource())
         .status(span.getStatus())
-        .timedEvents(adaptTimedEvents(span, timestampConverter))
+        .timedEvents(adaptTimedEvents(span))
         .build();
   }
 
-  private static List<TimedEvent> adaptTimedEvents(
-      ReadableSpan span, TimestampConverter timestampConverter) {
+  private static List<TimedEvent> adaptTimedEvents(ReadableSpan span) {
     List<io.opentelemetry.sdk.trace.TimedEvent> sourceEvents = span.getEvents();
     List<TimedEvent> result = new ArrayList<>(sourceEvents.size());
     for (io.opentelemetry.sdk.trace.TimedEvent sourceEvent : sourceEvents) {
-      result.add(adaptTimedEvent(sourceEvent, timestampConverter));
+      result.add(adaptTimedEvent(sourceEvent, span.getTimestampConverter()));
     }
     return result;
   }

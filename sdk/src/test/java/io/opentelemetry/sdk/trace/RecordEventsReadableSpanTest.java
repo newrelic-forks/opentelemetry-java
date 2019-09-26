@@ -336,6 +336,7 @@ public class RecordEventsReadableSpanTest {
         span.setAttribute("MyStringAttributeKey" + i, AttributeValue.longAttributeValue(i));
       }
       assertThat(span.getAttributes().size()).isEqualTo(maxNumberOfAttributes);
+      assertThat(span.getRawAttributes().getNumberOfDroppedAttributes()).isEqualTo(12);
       // Test that we still have in the attributes map the latest maxNumberOfAttributes / 2 entries.
       for (int i = 0; i < maxNumberOfAttributes / 2; i++) {
         int val = i + maxNumberOfAttributes * 3 / 2;
