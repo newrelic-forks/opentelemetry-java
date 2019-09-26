@@ -80,9 +80,8 @@ public final class TestUtils {
                 return value.equals(attrValue.getDoubleValue());
               case LONG:
                 return value.equals(attrValue.getLongValue());
-              default:
-                return false;
             }
+            return false;
           }
         });
   }

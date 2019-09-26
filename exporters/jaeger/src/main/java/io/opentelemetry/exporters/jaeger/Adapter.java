@@ -21,7 +21,6 @@ import com.google.protobuf.Timestamp;
 import com.google.protobuf.util.Timestamps;
 import io.opentelemetry.exporters.jaeger.proto.api_v2.Model;
 import io.opentelemetry.proto.trace.v1.Span;
-import io.opentelemetry.sdk.trace.TraceProtoUtils;
 import io.opentelemetry.sdk.trace.export.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanData.TimedEvent;
 import io.opentelemetry.trace.Link;

@@ -37,6 +37,7 @@ public interface ReadableSpan {
    * <p>Equivalent with {@link Span#getContext()}.
    *
    * @return the {@link SpanContext} of the {@code Span}.
+   * @since 0.1.0
    */
   SpanContext getSpanContext();
 
@@ -47,6 +48,7 @@ public interface ReadableSpan {
    * Span#updateName(String)} so this value cannot be cached.
    *
    * @return the name of the {@code Span}.
+   * @since 0.1.0
    */
   String getName();
 
@@ -54,6 +56,7 @@ public interface ReadableSpan {
    * Returns the value of System.nanoTime() when the span was started.
    *
    * @return Long value representing the System.nanoTime().
+   * @since 0.1.0
    */
   long getStartNanoTime();
 
@@ -62,6 +65,7 @@ public interface ReadableSpan {
    * return the current nano time.
    *
    * @return Long value representing the end nano time.
+   * @since 0.1.0
    */
   long getEndNanoTime();
 
@@ -69,6 +73,7 @@ public interface ReadableSpan {
    * Returns the kind of span (enum).
    *
    * @return The Kind of span.
+   * @since 0.1.0
    */
   Kind getKind();
 
@@ -76,6 +81,7 @@ public interface ReadableSpan {
    * Returns the parent span id.
    *
    * @return The parent span id.
+   * @since 0.1.0
    */
   SpanId getParentSpanId();
 
@@ -83,6 +89,7 @@ public interface ReadableSpan {
    * Returns the resource.
    *
    * @return The resource.
+   * @since 0.1.0
    */
   Resource getResource();
 
@@ -90,6 +97,7 @@ public interface ReadableSpan {
    * Returns the status.
    *
    * @return The status.
+   * @since 0.1.0
    */
   Status getStatus();
 
@@ -97,6 +105,7 @@ public interface ReadableSpan {
    * Gets the list of timed events currently held by thsi span.
    *
    * @return A list of TimedEvents.
+   * @since 0.1.0
    */
   List<TimedEvent> getEvents();
 
@@ -105,6 +114,7 @@ public interface ReadableSpan {
    * original (mutable) links.
    *
    * @return List of Links for this span.
+   * @since 0.1.0
    */
   List<Link> getLinks();
 
@@ -112,8 +122,23 @@ public interface ReadableSpan {
    * Returns the attributes for this span. Must be immutable.
    *
    * @return The attributes for this span.
+   * @since 0.1.0
    */
   Map<String, AttributeValue> getAttributes();
 
+  /**
+   * Returns the TimestampConverter used by this Span instance.
+   *
+   * @return The TimeStampConverter for this span.
+   * @since 0.1.0
+   */
   TimestampConverter getTimestampConverter();
+
+  /**
+   * Returns the number of child spans for this Span.
+   *
+   * @return the count of child spans.
+   * @since 0.1.0
+   */
+  int getChildSpanCount();
 }

@@ -493,7 +493,7 @@ public class RecordEventsReadableSpanTest {
     assertThat(span.getEndNanoTime())
         .isEqualTo(endTime.getSeconds() * 1_000_000_000 + endTime.getNanos());
     assertThat(span.getStatus().getCanonicalCode()).isEqualTo(status.getCanonicalCode());
-    //    assertThat(span.getChildSpanCount().getValue()).isEqualTo(childCount);
+    assertThat(span.getChildSpanCount()).isEqualTo(childCount);
   }
 
   private static final class SimpleEvent implements Event {
