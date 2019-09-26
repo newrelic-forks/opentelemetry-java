@@ -16,7 +16,7 @@
 
 package io.opentelemetry.sdk.trace;
 
-import com.google.common.annotations.VisibleForTesting;
+import io.opentelemetry.sdk.internal.TimestampConverter;
 import io.opentelemetry.sdk.trace.export.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanData.Event;
 import io.opentelemetry.sdk.trace.export.SpanData.TimedEvent;
@@ -24,12 +24,9 @@ import io.opentelemetry.sdk.trace.export.SpanData.Timestamp;
 import io.opentelemetry.trace.SpanId;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 /** An adapter that can convert a ReadableSpan into a SpanData. */
 public class ReadableSpanAdapter {
-
-  private static final long NANOS_PER_SECOND = TimeUnit.SECONDS.toNanos(1);
 
   /**
    * Converts a ReadableSpan into a new instance of SpanData.
@@ -38,14 +35,17 @@ public class ReadableSpanAdapter {
    * @return A newly created SpanData instance based on the data in the ReadableSpan.
    */
   public SpanData adapt(ReadableSpan span) {
+    TimestampConverter timestampConverter = span.getTimestampConverter();
+    SpanData.Timestamp startTimestamp = timestampConverter.convertNanoTime(span.getStartNanoTime());
+    SpanData.Timestamp endTimestamp = timestampConverter.convertNanoTime(span.getEndNanoTime());
     SpanId parentSpanId = span.getParentSpanId();
     parentSpanId = parentSpanId == null ? SpanId.getInvalid() : parentSpanId;
     return SpanData.newBuilder()
         .name(span.getName())
         .context(span.getSpanContext())
         .attributes(span.getAttributes())
-        .startTimestamp(nanoToTimestamp(span.getStartNanoTime()))
-        .endTimestamp(nanoToTimestamp(span.getEndNanoTime()))
+        .startTimestamp(startTimestamp)
+        .endTimestamp(endTimestamp)
         .kind(span.getKind())
         .links(span.getLinks())
         .parentSpanId(parentSpanId)
@@ -56,23 +56,20 @@ public class ReadableSpanAdapter {
   }
 
   private static List<TimedEvent> adaptTimedEvents(ReadableSpan span) {
-    List<io.opentelemetry.sdk.trace.TimedEvent> sourceEvents = span.getEvents();
+    List<io.opentelemetry.sdk.trace.TimedEvent> sourceEvents = span.getTimedEvents();
     List<TimedEvent> result = new ArrayList<>(sourceEvents.size());
     for (io.opentelemetry.sdk.trace.TimedEvent sourceEvent : sourceEvents) {
-      result.add(adaptTimedEvent(sourceEvent));
+      result.add(adaptTimedEvent(sourceEvent, span.getTimestampConverter()));
     }
     return result;
   }
 
-  private static TimedEvent adaptTimedEvent(io.opentelemetry.sdk.trace.TimedEvent sourceEvent) {
-    Timestamp timestamp = nanoToTimestamp(sourceEvent.getNanotime());
+  private static TimedEvent adaptTimedEvent(
+      io.opentelemetry.sdk.trace.TimedEvent sourceEvent, TimestampConverter timestampConverter) {
+
+    Timestamp timestamp = timestampConverter.convertNanoTime(sourceEvent.getNanotime());
     io.opentelemetry.trace.Event event =
         Event.create(sourceEvent.getName(), sourceEvent.getAttributes());
     return TimedEvent.create(timestamp, event);
-  }
-
-  @VisibleForTesting
-  static Timestamp nanoToTimestamp(long nanotime) {
-    return Timestamp.create(nanotime / NANOS_PER_SECOND, (int) (nanotime % NANOS_PER_SECOND));
   }
 }

@@ -22,7 +22,6 @@ import static org.junit.Assert.assertTrue;
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.exporters.jaeger.proto.api_v2.Model;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.sdk.trace.TraceProtoUtils;
 import io.opentelemetry.sdk.trace.export.SpanData;
 import io.opentelemetry.sdk.trace.export.SpanData.Event;
 import io.opentelemetry.sdk.trace.export.SpanData.Link;
@@ -187,7 +186,7 @@ public class AdapterTest {
   @Test
   public void testSpanRef() {
     // prepare
-    io.opentelemetry.trace.Link link = SpanData.Link.create(createSpanContext(TRACE_ID, SPAN_ID));
+    SpanData.Link link = SpanData.Link.create(createSpanContext(TRACE_ID, SPAN_ID));
 
     // test
     Model.SpanRef spanRef = Adapter.toSpanRef(link);
@@ -200,7 +199,7 @@ public class AdapterTest {
     assertEquals(Model.SpanRefType.FOLLOWS_FROM, spanRef.getRefType());
   }
 
-  private TimedEvent getTimedEvent() {
+  private static TimedEvent getTimedEvent() {
     long ms = System.currentTimeMillis();
     Timestamp ts = toTimestamp(ms);
     AttributeValue valueS = AttributeValue.stringAttributeValue("bar");
@@ -209,10 +208,10 @@ public class AdapterTest {
     return TimedEvent.create(ts, Event.create("the log message", attributes));
   }
 
-  private SpanData getSpanData(Timestamp startTime, Timestamp endTime) {
+  private static SpanData getSpanData(Timestamp startTime, Timestamp endTime) {
     AttributeValue valueB = AttributeValue.booleanAttributeValue(true);
-    Map<String, io.opentelemetry.trace.AttributeValue> attributes =
-        ImmutableMap.<String, io.opentelemetry.trace.AttributeValue>of("valueB", valueB);
+    Map<String, AttributeValue> attributes =
+        ImmutableMap.<String, AttributeValue>of("valueB", valueB);
 
     io.opentelemetry.trace.Link link =
         Link.create(createSpanContext(LINK_TRACE_ID, LINK_SPAN_ID), attributes);
@@ -240,7 +239,7 @@ public class AdapterTest {
         Tracestate.builder().build());
   }
 
-  Timestamp toTimestamp(long ms) {
+  private static Timestamp toTimestamp(long ms) {
     return Timestamp.create(ms / 1000, (int) ((ms % 1000) * 1000000));
   }
 

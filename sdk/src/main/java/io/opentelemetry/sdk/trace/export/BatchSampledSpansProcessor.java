@@ -19,6 +19,7 @@ package io.opentelemetry.sdk.trace.export;
 import com.google.common.util.concurrent.MoreExecutors;
 import io.opentelemetry.internal.Utils;
 import io.opentelemetry.sdk.trace.ReadableSpan;
+import io.opentelemetry.sdk.trace.ReadableSpanAdapter;
 import io.opentelemetry.sdk.trace.SpanProcessor;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -52,7 +53,13 @@ public final class BatchSampledSpansProcessor implements SpanProcessor {
       long scheduleDelayMillis,
       int maxQueueSize,
       int maxExportBatchSize) {
-    this.worker = new Worker(spanExporter, scheduleDelayMillis, maxQueueSize, maxExportBatchSize);
+    this.worker =
+        new Worker(
+            spanExporter,
+            new ReadableSpanAdapter(),
+            scheduleDelayMillis,
+            maxQueueSize,
+            maxExportBatchSize);
     this.workerThread = newThread(worker);
     this.workerThread.start();
   }
@@ -178,6 +185,7 @@ public final class BatchSampledSpansProcessor implements SpanProcessor {
   private static final class Worker implements Runnable {
     private static final Logger logger = Logger.getLogger(Worker.class.getName());
     private final SpanExporter spanExporter;
+    private final ReadableSpanAdapter readableSpanAdapter;
     private final long scheduleDelayMillis;
     private final int maxQueueSize;
     private final int maxExportBatchSize;
@@ -189,10 +197,12 @@ public final class BatchSampledSpansProcessor implements SpanProcessor {
 
     private Worker(
         SpanExporter spanExporter,
+        ReadableSpanAdapter readableSpanAdapter,
         long scheduleDelayMillis,
         int maxQueueSize,
         int maxExportBatchSize) {
       this.spanExporter = spanExporter;
+      this.readableSpanAdapter = readableSpanAdapter;
       this.scheduleDelayMillis = scheduleDelayMillis;
       this.maxQueueSize = maxQueueSize;
       this.halfMaxQueueSize = maxQueueSize >> 1;
@@ -271,7 +281,7 @@ public final class BatchSampledSpansProcessor implements SpanProcessor {
       }
     }
 
-    private static void createSpanDataForExport(
+    private void createSpanDataForExport(
         List<ReadableSpan> spanList,
         ArrayList<SpanData> spanDataBuffer,
         int startIndex,
@@ -283,8 +293,8 @@ public final class BatchSampledSpansProcessor implements SpanProcessor {
       }
     }
 
-    private static SpanData makeSpanData(ReadableSpan readableSpan) {
-      throw new UnsupportedOperationException("implement me" + readableSpan);
+    private SpanData makeSpanData(ReadableSpan readableSpan) {
+      return readableSpanAdapter.adapt(readableSpan);
     }
 
     // Exports the list of Span protos to all the ServiceHandlers.
