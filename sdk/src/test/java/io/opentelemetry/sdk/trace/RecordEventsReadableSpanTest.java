@@ -99,7 +99,7 @@ public class RecordEventsReadableSpanTest {
         span,
         Collections.<String, AttributeValue>emptyMap(),
         Collections.<TimedEvent>emptyList(),
-        Collections.<Link>emptyList(),
+        Collections.<Link>singletonList(link),
         SPAN_NAME,
         startTime,
         startTime,
@@ -270,19 +270,6 @@ public class RecordEventsReadableSpanTest {
   }
 
   @Test
-  public void addLink() {
-    RecordEventsReadableSpan span = createTestRootSpan();
-    try {
-      span.addLink(DefaultSpan.getInvalid().getContext());
-      span.addLink(spanContext, attributes);
-      span.addLink(io.opentelemetry.trace.util.Links.create(DefaultSpan.getInvalid().getContext()));
-    } finally {
-      span.end();
-    }
-    assertThat(span.getLinks().size()).isEqualTo(3);
-  }
-
-  @Test
   public void droppingAttributes() {
     final int maxNumberOfAttributes = 8;
     TraceConfig traceConfig =
@@ -376,29 +363,6 @@ public class RecordEventsReadableSpanTest {
     for (int i = 0; i < maxNumberOfEvents; i++) {
       long timeInNanos = (startTime.getSeconds() + maxNumberOfEvents + i) * NANOS_PER_SECOND;
       assertThat(span.getEvents().get(i)).isEqualTo(TimedEvent.create(timeInNanos, event));
-    }
-  }
-
-  @Test
-  public void droppingLinks() {
-    final int maxNumberOfLinks = 8;
-    TraceConfig traceConfig =
-        TraceConfig.getDefault().toBuilder().setMaxNumberOfLinks(maxNumberOfLinks).build();
-    RecordEventsReadableSpan span = createTestSpan(traceConfig);
-    try {
-      for (int i = 0; i < 2 * maxNumberOfLinks; i++) {
-        span.addLink(link);
-      }
-      assertThat(span.getLinks().size()).isEqualTo(maxNumberOfLinks);
-      for (int i = 0; i < maxNumberOfLinks; i++) {
-        assertThat(span.getLinks().get(i)).isEqualTo(link);
-      }
-    } finally {
-      span.end();
-    }
-    assertThat(span.getLinks().size()).isEqualTo(maxNumberOfLinks);
-    for (int i = 0; i < maxNumberOfLinks; i++) {
-      assertThat(span.getLinks().get(i)).isEqualTo(link);
     }
   }
 

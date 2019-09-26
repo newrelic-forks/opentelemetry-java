@@ -49,8 +49,7 @@ public class ReadableSpanAdapterTest {
   private static final long NANOS_PER_SECOND = TimeUnit.SECONDS.toNanos(1);
 
   @Test
-  public void testAdapt() throws Exception {
-
+  public void testAdapt() {
     String name = "GreatSpan";
     Kind kind = Kind.SERVER;
     TraceId traceId = TestUtils.generateRandomTraceId();
@@ -82,7 +81,8 @@ public class ReadableSpanAdapterTest {
             clock,
             resource,
             attributes,
-            links);
+            links,
+            1);
     readableSpan.addEvent("event1", event1Attributes);
     readableSpan.addEvent("event2", event2Attributes);
     readableSpan.end();

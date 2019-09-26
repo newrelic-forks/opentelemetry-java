@@ -21,6 +21,7 @@ import static org.junit.Assert.assertFalse;
 
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.sdk.trace.config.TraceConfig;
+import io.opentelemetry.sdk.trace.export.SpanData;
 import io.opentelemetry.sdk.trace.samplers.ProbabilitySampler;
 import io.opentelemetry.trace.AttributeValue;
 import io.opentelemetry.trace.DefaultSpan;
@@ -116,12 +117,10 @@ public class SpanBuilderSdkTest {
     }
     RecordEventsReadableSpan span = (RecordEventsReadableSpan) spanBuilder.startSpan();
     try {
-      io.opentelemetry.proto.trace.v1.Span protoSpan = span.toSpanProto();
-      assertThat(protoSpan.getLinks().getDroppedLinksCount()).isEqualTo(maxNumberOfLinks);
-      assertThat(protoSpan.getLinks().getLinkList().size()).isEqualTo(maxNumberOfLinks);
+      assertThat(span.getDroppedLinksCount()).isEqualTo(maxNumberOfLinks);
+      assertThat(span.getLinks().size()).isEqualTo(maxNumberOfLinks);
       for (int i = 0; i < maxNumberOfLinks; i++) {
-        assertThat(protoSpan.getLinks().getLinkList().get(i))
-            .isEqualTo(TraceProtoUtils.toProtoLink(link));
+        assertThat(span.getLinks().get(i)).isEqualTo(SpanData.Link.create(span.getContext()));
       }
     } finally {
       span.end();

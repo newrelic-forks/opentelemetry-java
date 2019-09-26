@@ -549,4 +549,14 @@ final class RecordEventsReadableSpan implements ReadableSpan, Span {
       return numberOfChildren;
     }
   }
+
+  /**
+   * The count of links that have been dropped.
+   *
+   * @return The number of links that have been dropped.
+   */
+  @VisibleForTesting
+  public int getDroppedLinksCount() {
+    return totalRecordedLinks - links.size();
+  }
 }
