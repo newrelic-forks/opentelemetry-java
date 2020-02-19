@@ -106,13 +106,32 @@ public class HttpTraceContext implements HttpTextFormat<SpanContext> {
   public <C /*>>> extends @NonNull Object*/> SpanContext extract(C carrier, Getter<C> getter) {
     checkNotNull(carrier, "carrier");
     checkNotNull(getter, "getter");
-    TraceId traceId;
-    SpanId spanId;
-    TraceFlags traceFlags;
-    String traceparent = getter.get(carrier, TRACE_PARENT);
-    if (traceparent == null) {
+    String traceParent = getter.get(carrier, TRACE_PARENT);
+    if (traceParent == null) {
       return INVALID_SPAN_CONTEXT;
     }
+
+    SpanContext parsedTraceParent = parseTraceParent(traceParent);
+
+    String traceState = getter.get(carrier, TRACE_STATE);
+    if (traceState == null || traceState.isEmpty()) {
+      return parsedTraceParent;
+    }
+    TraceState.Builder traceStateBuilder = TraceState.builder();
+    String[] listMembers = ENTRY_PATTERN.split(traceState);
+
+    // Iterate in reverse order because when call builder set the elements is added in the
+    // front of the list.
+    for (int i = listMembers.length - 1; i >= 0; i--) {
+      String listMember = listMembers[i];
+      traceStateBuilder.add(listMember);
+    }
+    return SpanContext.createFromRemoteParent(
+        parsedTraceParent.getTraceId(), parsedTraceParent.getSpanId(),
+        parsedTraceParent.getTraceFlags(), traceStateBuilder.build());
+  }
+
+  private static SpanContext parseTraceParent(String traceparent) {
     try {
       // TODO(bdrutu): Do we need to verify that version is hex and that for the version
       // the length is the expected one?
@@ -125,26 +144,12 @@ public class HttpTraceContext implements HttpTextFormat<SpanContext> {
               && traceparent.charAt(TRACE_OPTION_OFFSET - 1) == TRACEPARENT_DELIMITER,
           "Missing or malformed TRACEPARENT.");
 
-      traceId = TraceId.fromLowerBase16(traceparent, TRACE_ID_OFFSET);
-      spanId = SpanId.fromLowerBase16(traceparent, SPAN_ID_OFFSET);
-      traceFlags = TraceFlags.fromLowerBase16(traceparent, TRACE_OPTION_OFFSET);
+      TraceId traceId = TraceId.fromLowerBase16(traceparent, TRACE_ID_OFFSET);
+      SpanId spanId = SpanId.fromLowerBase16(traceparent, SPAN_ID_OFFSET);
+      TraceFlags traceFlags = TraceFlags.fromLowerBase16(traceparent, TRACE_OPTION_OFFSET);
+      return SpanContext.createFromRemoteParent(traceId, spanId, traceFlags, TRACE_STATE_DEFAULT);
     } catch (IllegalArgumentException e) {
       throw new IllegalArgumentException("Invalid traceparent: " + traceparent, e);
     }
-
-    String traceState = getter.get(carrier, TRACE_STATE);
-    if (traceState == null || traceState.isEmpty()) {
-      return SpanContext.createFromRemoteParent(traceId, spanId, traceFlags, TRACE_STATE_DEFAULT);
-    }
-    TraceState.Builder traceStateBuilder = TraceState.builder();
-    String[] listMembers = ENTRY_PATTERN.split(traceState);
-    // Iterate in reverse order because when call builder set the elements is added in the
-    // front of the list.
-    for (int i = listMembers.length - 1; i >= 0; i--) {
-      String listMember = listMembers[i];
-      traceStateBuilder.add(listMember);
-    }
-    return SpanContext.createFromRemoteParent(
-        traceId, spanId, traceFlags, traceStateBuilder.build());
   }
 }
