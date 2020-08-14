@@ -17,7 +17,6 @@
 package io.opentelemetry.trace;
 
 import io.opentelemetry.internal.Utils;
-import java.util.Random;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
@@ -33,10 +32,12 @@ public final class SpanId implements Comparable<SpanId> {
   private static final int SIZE = 8;
   private static final int BASE16_SIZE = 2 * SIZE;
   private static final long INVALID_ID = 0;
+  private static final String INVALID_STRING_VALUE = "0000000000000000";
   private static final SpanId INVALID = new SpanId(INVALID_ID);
 
   // The internal representation of the SpanId.
-  private final long id;
+  private long id;
+  private String base16Representation;
 
   /**
    * Constructs a {@code SpanId} whose representation is specified by a long value.
@@ -53,6 +54,10 @@ public final class SpanId implements Comparable<SpanId> {
    */
   public SpanId(long id) {
     this.id = id;
+  }
+
+  private SpanId(String id) {
+    this.base16Representation = id;
   }
 
   /**
@@ -73,20 +78,6 @@ public final class SpanId implements Comparable<SpanId> {
    */
   public static SpanId getInvalid() {
     return INVALID;
-  }
-
-  /**
-   * Generates a new random {@code SpanId}.
-   *
-   * @param random The random number generator.
-   * @return a valid new {@code SpanId}.
-   */
-  static SpanId generateRandomId(Random random) {
-    long id;
-    do {
-      id = random.nextLong();
-    } while (id == INVALID_ID);
-    return new SpanId(id);
   }
 
   /**
@@ -136,7 +127,14 @@ public final class SpanId implements Comparable<SpanId> {
    */
   public static SpanId fromLowerBase16(CharSequence src, int srcOffset) {
     Utils.checkNotNull(src, "src");
-    return new SpanId(BigendianEncoding.longFromBase16String(src, srcOffset));
+    for (int i = srcOffset; i < srcOffset + BASE16_SIZE; i++) {
+      int digit = Character.digit(src.charAt(i), 16);
+      if (digit < 0) {
+        throw new IllegalArgumentException("Invalid base 16 value");
+      }
+    }
+    String id = src.subSequence(srcOffset, srcOffset + BASE16_SIZE).toString();
+    return new SpanId(id);
   }
 
   /**
@@ -150,7 +148,11 @@ public final class SpanId implements Comparable<SpanId> {
    * @since 0.1.0
    */
   public void copyLowerBase16To(char[] dest, int destOffset) {
-    BigendianEncoding.longToBase16String(id, dest, destOffset);
+    if (base16Representation != null) {
+      System.arraycopy(base16Representation.toCharArray(), 0, dest, destOffset, BASE16_SIZE);
+    } else {
+      BigendianEncoding.longToBase16String(id, dest, destOffset);
+    }
   }
 
   /**
@@ -161,6 +163,9 @@ public final class SpanId implements Comparable<SpanId> {
    * @since 0.1.0
    */
   public boolean isValid() {
+    if (base16Representation != null) {
+      return !base16Representation.equals(INVALID_STRING_VALUE);
+    }
     return id != INVALID_ID;
   }
 
@@ -171,6 +176,9 @@ public final class SpanId implements Comparable<SpanId> {
    * @since 0.1.0
    */
   public String toLowerBase16() {
+    if (base16Representation != null) {
+      return base16Representation;
+    }
     char[] chars = new char[BASE16_SIZE];
     copyLowerBase16To(chars, 0);
     return new String(chars);
@@ -187,13 +195,26 @@ public final class SpanId implements Comparable<SpanId> {
     }
 
     SpanId that = (SpanId) obj;
-    return id == that.id;
+
+    if (base16Representation != null && that.base16Representation != null) {
+      return base16Representation.equals(that.base16Representation);
+    }
+
+    return longValue() == that.longValue();
+  }
+
+  private long longValue() {
+    if (base16Representation == null) {
+      return id;
+    }
+    return BigendianEncoding.longFromBase16String(base16Representation, 0);
   }
 
   @Override
   public int hashCode() {
     // Copied from Long.hashCode in java8.
-    return (int) (id ^ (id >>> 32));
+    long l = longValue();
+    return (int) (l ^ (l >>> 32));
   }
 
   @Override
@@ -203,7 +224,9 @@ public final class SpanId implements Comparable<SpanId> {
 
   @Override
   public int compareTo(SpanId that) {
+    long thisValue = longValue();
+    long thatValue = that.longValue();
     // Copied from Long.compare in java8.
-    return (id < that.id) ? -1 : ((id == that.id) ? 0 : 1);
+    return (thisValue < thatValue) ? -1 : ((thisValue == thatValue) ? 0 : 1);
   }
 }
