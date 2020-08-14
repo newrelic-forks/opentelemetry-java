@@ -39,6 +39,15 @@ final class BigendianEncoding {
     return encoding;
   }
 
+  static byte[] bytesFromBase16(CharSequence value, int srcOffset, int charactersToRead) {
+    CharSequence part = value.subSequence(srcOffset, srcOffset + charactersToRead);
+    byte[] result = new byte[charactersToRead / 2];
+    for (int i = 0; i < charactersToRead; i += 2) {
+      result[i / 2] = byteFromBase16String(part, i);
+    }
+    return result;
+  }
+
   private static byte[] buildDecodingArray() {
     byte[] decoding = new byte[ASCII_CHARACTERS];
     Arrays.fill(decoding, (byte) -1);

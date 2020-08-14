@@ -110,7 +110,12 @@ public final class SpanId implements Comparable<SpanId> {
    * @since 0.1.0
    */
   public void copyBytesTo(byte[] dest, int destOffset) {
-    BigendianEncoding.longToByteArray(id, dest, destOffset);
+    if (base16Representation == null) {
+      BigendianEncoding.longToByteArray(id, dest, destOffset);
+    } else {
+      byte[] bytes = BigendianEncoding.bytesFromBase16(base16Representation, 0, BASE16_SIZE);
+      System.arraycopy(bytes, 0, dest, destOffset, SIZE);
+    }
   }
 
   /**
