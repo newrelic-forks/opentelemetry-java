@@ -35,7 +35,8 @@ public final class SpanId implements Comparable<SpanId> {
   private static final String INVALID_STRING_VALUE = "0000000000000000";
   private static final SpanId INVALID = new SpanId(INVALID_ID);
 
-  // The internal representation of the SpanId.
+  // The internal representation of the SpanId. Either the long or the String will be used,
+  // depending on use-case.
   private long id;
   private String base16Representation;
 
@@ -131,12 +132,7 @@ public final class SpanId implements Comparable<SpanId> {
    */
   public static SpanId fromLowerBase16(CharSequence src, int srcOffset) {
     Utils.checkNotNull(src, "src");
-    for (int i = srcOffset; i < srcOffset + BASE16_SIZE; i++) {
-      int digit = Character.digit(src.charAt(i), 16);
-      if (digit < 0) {
-        throw new IllegalArgumentException("Invalid base 16 value");
-      }
-    }
+    BigendianEncoding.validateBase16(src, srcOffset, BASE16_SIZE);
     String id = src.subSequence(srcOffset, srcOffset + BASE16_SIZE).toString();
     return new SpanId(id);
   }
@@ -153,7 +149,9 @@ public final class SpanId implements Comparable<SpanId> {
    */
   public void copyLowerBase16To(char[] dest, int destOffset) {
     if (base16Representation != null) {
-      System.arraycopy(base16Representation.toCharArray(), 0, dest, destOffset, BASE16_SIZE);
+      for (int i = 0; i < base16Representation.length(); i++) {
+        dest[destOffset + i] = base16Representation.charAt(i);
+      }
     } else {
       BigendianEncoding.longToBase16String(id, dest, destOffset);
     }

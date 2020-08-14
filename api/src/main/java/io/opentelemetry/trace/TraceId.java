@@ -17,7 +17,6 @@
 package io.opentelemetry.trace;
 
 import io.opentelemetry.internal.Utils;
-import java.util.Random;
 import javax.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 
@@ -33,11 +32,14 @@ public final class TraceId implements Comparable<TraceId> {
   private static final int SIZE = 16;
   private static final int BASE16_SIZE = 2 * BigendianEncoding.LONG_BASE16;
   private static final long INVALID_ID = 0;
+  private static final String INVALID_STRING_VALUE = "00000000000000000000000000000000";
   private static final TraceId INVALID = new TraceId(INVALID_ID, INVALID_ID);
 
-  // The internal representation of the TraceId.
-  private final long idHi;
-  private final long idLo;
+  // The internal representation of the TraceId. Either the longs or the String will be used,
+  // depending on use-case.
+  private long idHi;
+  private long idLo;
+  private String base16Representation;
 
   /**
    * Constructs a {@code TraceId} whose representation is specified by two long values representing
@@ -59,6 +61,10 @@ public final class TraceId implements Comparable<TraceId> {
     this.idLo = idLo;
   }
 
+  private TraceId(String id) {
+    base16Representation = id;
+  }
+
   /**
    * Returns the size in bytes of the {@code TraceId}.
    *
@@ -77,22 +83,6 @@ public final class TraceId implements Comparable<TraceId> {
    */
   public static TraceId getInvalid() {
     return INVALID;
-  }
-
-  /**
-   * Generates a new random {@code TraceId}.
-   *
-   * @param random the random number generator.
-   * @return a new valid {@code TraceId}.
-   */
-  static TraceId generateRandomId(Random random) {
-    long idHi;
-    long idLo;
-    do {
-      idHi = random.nextLong();
-      idLo = random.nextLong();
-    } while (idHi == INVALID_ID && idLo == INVALID_ID);
-    return new TraceId(idHi, idLo);
   }
 
   /**
@@ -127,8 +117,12 @@ public final class TraceId implements Comparable<TraceId> {
    * @since 0.1.0
    */
   public void copyBytesTo(byte[] dest, int destOffset) {
-    BigendianEncoding.longToByteArray(idHi, dest, destOffset);
-    BigendianEncoding.longToByteArray(idLo, dest, destOffset + BigendianEncoding.LONG_BYTES);
+    if (base16Representation == null) {
+      BigendianEncoding.longToByteArray(idHi, dest, destOffset);
+      BigendianEncoding.longToByteArray(idLo, dest, destOffset + BigendianEncoding.LONG_BYTES);
+    } else {
+      BigendianEncoding.copyBytesInto(dest, destOffset, base16Representation, 0, BASE16_SIZE);
+    }
   }
 
   /**
@@ -145,9 +139,9 @@ public final class TraceId implements Comparable<TraceId> {
    */
   public static TraceId fromLowerBase16(CharSequence src, int srcOffset) {
     Utils.checkNotNull(src, "src");
-    return new TraceId(
-        BigendianEncoding.longFromBase16String(src, srcOffset),
-        BigendianEncoding.longFromBase16String(src, srcOffset + BigendianEncoding.LONG_BASE16));
+    BigendianEncoding.validateBase16(src, srcOffset, BASE16_SIZE);
+    String id = src.subSequence(srcOffset, srcOffset + BASE16_SIZE).toString();
+    return new TraceId(id);
   }
 
   /**
@@ -161,8 +155,14 @@ public final class TraceId implements Comparable<TraceId> {
    * @since 0.1.0
    */
   public void copyLowerBase16To(char[] dest, int destOffset) {
-    BigendianEncoding.longToBase16String(idHi, dest, destOffset);
-    BigendianEncoding.longToBase16String(idLo, dest, destOffset + BASE16_SIZE / 2);
+    if (base16Representation != null) {
+      for (int i = 0; i < base16Representation.length(); i++) {
+        dest[destOffset + i] = base16Representation.charAt(i);
+      }
+    } else {
+      BigendianEncoding.longToBase16String(idHi, dest, destOffset);
+      BigendianEncoding.longToBase16String(idLo, dest, destOffset + BASE16_SIZE / 2);
+    }
   }
 
   /**
@@ -173,6 +173,9 @@ public final class TraceId implements Comparable<TraceId> {
    * @since 0.1.0
    */
   public boolean isValid() {
+    if (base16Representation != null) {
+      return !base16Representation.equals(INVALID_STRING_VALUE);
+    }
     return idHi != INVALID_ID || idLo != INVALID_ID;
   }
 
@@ -183,6 +186,9 @@ public final class TraceId implements Comparable<TraceId> {
    * @since 0.1.0
    */
   public String toLowerBase16() {
+    if (base16Representation != null) {
+      return base16Representation;
+    }
     char[] chars = new char[BASE16_SIZE];
     copyLowerBase16To(chars, 0);
     return new String(chars);
@@ -199,7 +205,25 @@ public final class TraceId implements Comparable<TraceId> {
     }
 
     TraceId that = (TraceId) obj;
-    return idHi == that.idHi && idLo == that.idLo;
+    if (base16Representation != null && that.base16Representation != null) {
+      return base16Representation.equals(that.base16Representation);
+    }
+
+    return hiLongValue() == that.hiLongValue() && loLongValue() == that.loLongValue();
+  }
+
+  private long hiLongValue() {
+    if (base16Representation == null) {
+      return idHi;
+    }
+    return BigendianEncoding.longFromBase16String(base16Representation, 0);
+  }
+
+  private long loLongValue() {
+    if (base16Representation == null) {
+      return idLo;
+    }
+    return BigendianEncoding.longFromBase16String(base16Representation, SIZE);
   }
 
   /**
@@ -211,15 +235,17 @@ public final class TraceId implements Comparable<TraceId> {
    * @return the rightmost 8 bytes of the trace-id as a long value.
    */
   public long getTraceRandomPart() {
-    return idLo;
+    return loLongValue();
   }
 
   @Override
   public int hashCode() {
     // Copied from Arrays.hashCode(long[])
     int result = 1;
-    result = 31 * result + ((int) (idHi ^ (idHi >>> 32)));
-    result = 31 * result + ((int) (idLo ^ (idLo >>> 32)));
+    long hiLongValue = hiLongValue();
+    result = 31 * result + ((int) (hiLongValue ^ (hiLongValue >>> 32)));
+    long loLongValue = loLongValue();
+    result = 31 * result + ((int) (loLongValue ^ (loLongValue >>> 32)));
     return result;
   }
 
@@ -230,12 +256,16 @@ public final class TraceId implements Comparable<TraceId> {
 
   @Override
   public int compareTo(TraceId that) {
-    if (idHi == that.idHi) {
-      if (idLo == that.idLo) {
+    long thatHi = that.hiLongValue();
+    long thisHi = hiLongValue();
+    if (thisHi == thatHi) {
+      long thisLo = loLongValue();
+      long thatLo = that.loLongValue();
+      if (thisLo == thatLo) {
         return 0;
       }
-      return idLo < that.idLo ? -1 : 1;
+      return thisLo < thatLo ? -1 : 1;
     }
-    return idHi < that.idHi ? -1 : 1;
+    return thisHi < thatHi ? -1 : 1;
   }
 }

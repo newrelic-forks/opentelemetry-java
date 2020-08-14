@@ -173,4 +173,13 @@ final class BigendianEncoding {
   }
 
   private BigendianEncoding() {}
+
+  static void validateBase16(CharSequence src, int srcOffset, int numberToValidate) {
+    for (int i = srcOffset; i < srcOffset + numberToValidate; i++) {
+      int digit = Character.digit(src.charAt(i), 16);
+      if (digit < 0) {
+        throw new IllegalArgumentException("Invalid base 16 value");
+      }
+    }
+  }
 }
